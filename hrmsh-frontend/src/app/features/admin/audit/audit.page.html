@@ -1,0 +1,223 @@
+<div class="row">
+  <div class="col-12">
+    <div
+      class="page-title-box d-sm-flex align-items-center justify-content-between"
+    >
+      <h4 class="mb-sm-0">
+        {{ 'admin.audit.title' | t }}
+      </h4>
+      <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+          <li class="breadcrumb-item">
+            <a routerLink="/dashboard" class="text-reset">
+              {{ 'menu.dashboard' | t }}
+            </a>
+          </li>
+          <li class="breadcrumb-item active">
+            {{ 'admin.audit.title' | t }}
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          {{ 'admin.audit.filters' | t }}
+        </h5>
+      </div>
+      <div class="card-body">
+        <form [formGroup]="filterForm" (ngSubmit)="load(1)">
+          <div class="row g-2">
+            <div class="col-md-3">
+              <label class="form-label">
+                {{ 'admin.audit.entityType' | t }}
+              </label>
+              <select class="form-select" formControlName="entityType">
+                <option value="">
+                  {{ 'admin.audit.entityTypeAll' | t }}
+                </option>
+                <option *ngFor="let t of knownEntityTypes" [value]="t">
+                  {{ t }}
+                </option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">
+                {{ 'admin.audit.patientId' | t }}
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="patientId"
+                placeholder="123"
+              />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">
+                {{ 'admin.audit.userName' | t }}
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="userName"
+                placeholder="admin@hrmsh.local"
+              />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">
+                {{ 'admin.audit.dateFrom' | t }}
+              </label>
+              <input
+                type="date"
+                class="form-control"
+                formControlName="fromDate"
+              />
+            </div>
+            <div class="col-md-3 mt-2 mt-md-0">
+              <label class="form-label">
+                {{ 'admin.audit.dateTo' | t }}
+              </label>
+              <input
+                type="date"
+                class="form-control"
+                formControlName="toDate"
+              />
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2 mt-2 mt-md-4">
+              <button type="submit" class="btn btn-primary">
+                {{ 'admin.audit.applyFilters' | t }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-soft-secondary"
+                (click)="resetFilters()"
+              >
+                {{ 'admin.audit.resetFilters' | t }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          {{ 'admin.audit.results' | t }}
+        </h5>
+        <span class="text-muted small">
+          {{ 'admin.audit.total' | t }}: {{ totalCount }}
+        </span>
+      </div>
+      <div class="card-body">
+        <div *ngIf="loading" class="text-center py-3">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+
+        <div
+          class="table-responsive"
+          *ngIf="!loading && logs.length > 0"
+        >
+          <table class="table table-sm table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 170px">
+                  {{ 'admin.audit.date' | t }}
+                </th>
+                <th style="width: 140px">
+                  {{ 'admin.audit.user' | t }}
+                </th>
+                <th style="width: 120px">
+                  {{ 'admin.audit.entity' | t }}
+                </th>
+                <th style="width: 90px">
+                  {{ 'admin.audit.entityId' | t }}
+                </th>
+                <th style="width: 90px">
+                  {{ 'admin.audit.patientId' | t }}
+                </th>
+                <th style="width: 100px">
+                  {{ 'admin.audit.action' | t }}
+                </th>
+                <th>
+                  {{ 'admin.audit.description' | t }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let log of logs">
+                <td>
+                  {{ log.createdAt | date: 'yyyy-MM-dd HH:mm' }}
+                </td>
+                <td>{{ log.userName || '-' }}</td>
+                <td>{{ log.entityType }}</td>
+                <td>{{ log.entityId }}</td>
+                <td>{{ log.patientId || '-' }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    [ngClass]="{
+                      'bg-success-subtle text-success': log.action === 'Created',
+                      'bg-warning-subtle text-warning': log.action === 'Updated',
+                      'bg-danger-subtle text-danger': log.action === 'Deleted'
+                    }"
+                  >
+                    {{ log.action }}
+                  </span>
+                </td>
+                <td>{{ log.description }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          *ngIf="!loading && logs.length === 0"
+          class="text-muted text-center py-3"
+        >
+          {{ 'admin.audit.noResults' | t }}
+        </div>
+
+        <div
+          class="d-flex justify-content-between align-items-center mt-3"
+          *ngIf="totalCount > pageSize"
+        >
+          <button
+            type="button"
+            class="btn btn-soft-secondary btn-sm"
+            (click)="changePage(-1)"
+          >
+            {{ 'admin.audit.prev' | t }}
+          </button>
+          <div class="text-muted">
+            {{ 'admin.audit.page' | t }}
+            {{ pageNumber }}
+            {{ 'admin.audit.of' | t }}
+            {{
+              math.max(1, math.ceil(totalCount / pageSize))
+            }}
+          </div>
+          <button
+            type="button"
+            class="btn btn-soft-secondary btn-sm"
+            (click)="changePage(1)"
+          >
+            {{ 'admin.audit.next' | t }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

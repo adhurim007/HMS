@@ -1,0 +1,15 @@
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Release\net8.0\HrmsH.Application.csproj.AssemblyReference.cache
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Release\net8.0\HrmsH.Application.GeneratedMSBuildEditorConfig.editorconfig
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Release\net8.0\HrmsH.Application.AssemblyInfoInputs.cache
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Release\net8.0\HrmsH.Application.AssemblyInfo.cs
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Release\net8.0\HrmsH.Application.csproj.CoreCompileInputs.cache
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\bin\Release\net8.0\HrmsH.Application.deps.json
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\bin\Release\net8.0\HrmsH.Application.dll
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\bin\Release\net8.0\HrmsH.Application.pdb
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\bin\Release\net8.0\HrmsH.Domain.dll
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\bin\Release\net8.0\HrmsH.Domain.pdb
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Release\net8.0\HrmsH.Ap.DE8FA3EB.Up2Date
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Release\net8.0\HrmsH.Application.dll
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Release\net8.0\refint\HrmsH.Application.dll
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Release\net8.0\HrmsH.Application.pdb
+e:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Release\net8.0\ref\HrmsH.Application.dll

@@ -1,0 +1,461 @@
+<div class="row mb-3">
+  <div class="col">
+    <h4 class="mb-0">{{ viewMode === 'services' ? 'Service catalog' : 'Billing' }}</h4>
+  </div>
+</div>
+
+<!-- ========== INVOICES TAB ========== -->
+<div *ngIf="viewMode === 'invoices'">
+  <div *ngIf="showInvoiceForm; else invoiceListBlock">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h5 class="mb-0">New invoice</h5>
+      <button type="button" class="btn btn-soft-secondary btn-sm" (click)="closeInvoiceForm()">
+        <i class="ri-arrow-left-line me-1"></i> Back
+      </button>
+    </div>
+    <div class="alert alert-danger py-2" *ngIf="invoiceError">
+      {{ invoiceError }}
+    </div>
+    <div class="card">
+      <form [formGroup]="invoiceForm" (ngSubmit)="submitInvoice()">
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Invoice source</label>
+            <div class="d-flex gap-3">
+              <label class="form-check">
+                <input type="radio" class="form-check-input" name="invoiceSource" [checked]="invoiceSource === 'manual'" (change)="onInvoiceSourceChanged('manual')">
+                <span class="form-check-label">Manual – add services/products manually</span>
+              </label>
+              <label class="form-check">
+                <input type="radio" class="form-check-input" name="invoiceSource" [checked]="invoiceSource === 'visit'" (change)="onInvoiceSourceChanged('visit')">
+                <span class="form-check-label">From visits – add unbilled visit services</span>
+              </label>
+              <label class="form-check">
+                <input type="radio" class="form-check-input" name="invoiceSource" [checked]="invoiceSource === 'laboratory'" (change)="onInvoiceSourceChanged('laboratory')">
+                <span class="form-check-label">From laboratory – add unbilled lab tests</span>
+              </label>
+            </div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Patient</label>
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="patientSearchTerm"
+                  [ngModelOptions]="{ standalone: true }"
+                  (input)="searchPatientsForInvoice()"
+                  placeholder="Search by patient name or personal number"
+                />
+                <button
+                  *ngIf="selectedPatient"
+                  type="button"
+                  class="btn btn-soft-secondary"
+                  (click)="clearSelectedPatientForInvoice()"
+                >
+                  Clear
+                </button>
+              </div>
+              <div class="list-group position-relative z-3" *ngIf="patientSearchResults.length > 0">
+                <button
+                  type="button"
+                  class="list-group-item list-group-item-action"
+                  *ngFor="let p of patientSearchResults"
+                  (click)="selectPatientForInvoice(p)"
+                >
+                  {{ p.fullName }} - {{ p.medicalRecordNumber }}
+                </button>
+              </div>
+              <small class="text-muted" *ngIf="loadingPatientSearch">Searching patients...</small>
+              <small class="text-muted" *ngIf="selectedPatient">Selected: {{ selectedPatient.fullName }} ({{ selectedPatient.medicalRecordNumber }})</small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Invoice date</label>
+              <input type="date" class="form-control" formControlName="invoiceDate" />
+            </div>
+          </div>
+          <div *ngIf="invoiceSource === 'visit'" class="mb-3">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <button type="button" class="btn btn-soft-primary btn-sm" (click)="loadUnbilledVisitServices()" [disabled]="!invoiceForm.get('patientId')?.value || unbilledLoading">
+                {{ unbilledLoading ? 'Loading...' : 'Refresh unbilled visit services' }}
+              </button>
+            </div>
+            <p class="small text-muted mb-2" *ngIf="invoiceForm.get('patientId')?.value && !unbilledLoading && unbilledVisitServices.length === 0">
+              No unbilled visit services for this patient.
+            </p>
+            <div *ngIf="unbilledVisitServices.length > 0" class="mb-3">
+              <div class="fw-semibold small mb-1">Visit services</div>
+              <div class="table-responsive mb-2">
+                <table class="table table-sm table-hover">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width: 2rem"></th>
+                      <th>Visit date</th>
+                      <th>Doctor</th>
+                      <th>Service</th>
+                      <th>Qty</th>
+                      <th>Unit price</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let u of unbilledVisitServices">
+                      <td>
+                        <input type="checkbox" [checked]="selectedVisitServiceIds.has(u.id)" (change)="toggleVisitServiceSelection(u.id)">
+                      </td>
+                      <td>{{ u.visitDate | date: 'shortDate' }}</td>
+                      <td>{{ u.doctorName ?? '—' }}</td>
+                      <td>{{ u.serviceName }}</td>
+                      <td>{{ u.quantity }}</td>
+                      <td>{{ u.unitPrice | number: '1.2-2' }}</td>
+                      <td>{{ u.lineTotal | number: '1.2-2' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="btn btn-soft-success btn-sm"
+              (click)="addSelectedUnbilledToInvoice()"
+              [disabled]="selectedVisitServiceIds.size === 0"
+            >
+              <i class="ri-add-line me-1"></i> Add selected to invoice
+            </button>
+          </div>
+          <div *ngIf="invoiceSource === 'laboratory'" class="mb-3">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <button type="button" class="btn btn-soft-primary btn-sm" (click)="loadUnbilledLaboratoryItems()" [disabled]="!invoiceForm.get('patientId')?.value || unbilledLoading">
+                {{ unbilledLoading ? 'Loading...' : 'Refresh unbilled lab tests' }}
+              </button>
+            </div>
+            <div *ngIf="unbilledLaboratoryItems.length > 0" class="table-responsive mb-2">
+              <table class="table table-sm table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 2rem"></th>
+                    <th>Ordered</th>
+                    <th>Order #</th>
+                    <th>Doctor</th>
+                    <th>Test</th>
+                    <th>Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let u of unbilledLaboratoryItems">
+                    <td>
+                      <input type="checkbox" [checked]="selectedLabItemIds.has(u.id)" (change)="toggleLabItemSelection(u.id)">
+                    </td>
+                    <td>{{ u.orderedAt | date: 'shortDate' }}</td>
+                    <td>#{{ u.laboratoryOrderId }}</td>
+                    <td>{{ u.doctorName ?? '—' }}</td>
+                    <td>{{ u.testName }}</td>
+                    <td>{{ u.unitPrice | number: '1.2-2' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <button type="button" class="btn btn-soft-success btn-sm" (click)="addSelectedUnbilledToInvoice()" [disabled]="selectedLabItemIds.size === 0">
+              <i class="ri-add-line me-1"></i> Add selected to invoice
+            </button>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label mb-0">Line items</label>
+            <button type="button" class="btn btn-soft-primary btn-sm" (click)="addInvoiceLine()">
+              <i class="ri-add-line me-1"></i> Add line
+            </button>
+          </div>
+          <div formArrayName="items">
+            <div *ngFor="let item of itemsArray.controls; let i = index" [formGroupName]="i" class="row g-2 align-items-start mb-2 border rounded p-2">
+              <div class="col-md-3">
+                <label class="form-label small">Service</label>
+                <select class="form-select form-select-sm" formControlName="serviceItemId" (change)="onServiceSelect(i)">
+                  <option [ngValue]="null">— Manual —</option>
+                  <option *ngFor="let s of serviceItems" [ngValue]="s.id">{{ s.name }} ({{ s.price }})</option>
+                </select>
+                <small class="text-muted" *ngIf="serviceItems.length === 0">No services. Add them from <a routerLink="/admin/service-catalog" class="text-primary">Service catalog</a>.</small>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Description</label>
+                <input type="text" class="form-control form-control-sm" formControlName="description" placeholder="Description" />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small">Unit price</label>
+                <input type="number" step="0.01" class="form-control form-control-sm" formControlName="unitPrice" />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small">Qty</label>
+                <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" formControlName="quantity" />
+              </div>
+              <div class="col-md-1 pt-4">
+                <button type="button" class="btn btn-soft-danger btn-sm" (click)="removeInvoiceLine(i)">
+                  <i class="ri-delete-bin-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-soft-secondary" (click)="closeInvoiceForm()" [disabled]="invoiceSubmitting">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="invoiceSubmitting">
+            {{ invoiceSubmitting ? 'Creating...' : 'Create invoice' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div *ngIf="showInvoiceDetail && selectedInvoice" class="mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h5 class="mb-0">Invoice {{ selectedInvoice.invoiceNumber }}</h5>
+      <button type="button" class="btn btn-soft-secondary btn-sm" (click)="closeInvoiceDetail()">
+        <i class="ri-arrow-left-line me-1"></i> Back to list
+      </button>
+    </div>
+    <div class="card mb-3">
+      <div class="card-body">
+        <p><strong>Patient:</strong> {{ getPatientName(selectedInvoice.patientId) }}</p>
+        <p><strong>Date:</strong> {{ selectedInvoice.invoiceDate | date: 'mediumDate' }}</p>
+        <p><strong>Total:</strong> {{ selectedInvoice.totalAmount | number: '1.2-2' }} · <strong>Paid:</strong> {{ selectedInvoice.paidAmount | number: '1.2-2' }}</p>
+        <p><strong>Status:</strong> <span class="badge bg-info-subtle text-info">{{ getStatusLabel(selectedInvoice.status) }}</span></p>
+        <table class="table table-sm mt-2">
+          <thead><tr><th>Description</th><th>Price</th><th>Qty</th><th>Total</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let line of selectedInvoice.items">
+              <td>{{ line.description }}</td>
+              <td>{{ line.unitPrice | number: '1.2-2' }}</td>
+              <td>{{ line.quantity }}</td>
+              <td>{{ line.lineTotal | number: '1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h6 class="mb-0">Add payment</h6></div>
+      <form [formGroup]="paymentForm" (ngSubmit)="submitPayment()" class="card-body">
+        <div class="row g-2">
+          <div class="col-md-2"><label class="form-label">Amount</label><input type="number" step="0.01" class="form-control" formControlName="amount" /></div>
+          <div class="col-md-2"><label class="form-label">Date</label><input type="date" class="form-control" formControlName="paymentDate" /></div>
+          <div class="col-md-2">
+            <label class="form-label">Method</label>
+            <select class="form-select" formControlName="method">
+              <option *ngFor="let pm of paymentMethodOptions" [ngValue]="pm">{{ pm }}</option>
+            </select>
+          </div>
+          <div class="col-md-4"><label class="form-label">Reference</label><input type="text" class="form-control" formControlName="reference" /></div>
+          <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-primary">Record payment</button></div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <ng-template #invoiceListBlock>
+    <div *ngIf="!showInvoiceDetail" class="mb-3">
+      <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        <button type="button" class="btn btn-primary btn-sm" (click)="openNewInvoice()">
+          <i class="ri-add-line me-1"></i> New invoice
+        </button>
+      </div>
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label">Patient</label>
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="patientFilterSearchTerm"
+                  (input)="searchPatientsForInvoiceFilter()"
+                  placeholder="Search patient name or personal number"
+                />
+                <button
+                  *ngIf="patientFilter !== null"
+                  type="button"
+                  class="btn btn-soft-secondary"
+                  (click)="clearInvoicePatientFilterOnly()"
+                >
+                  Clear
+                </button>
+              </div>
+              <div class="list-group position-relative z-3" *ngIf="patientFilterSearchResults.length > 0">
+                <button
+                  type="button"
+                  class="list-group-item list-group-item-action"
+                  *ngFor="let p of patientFilterSearchResults"
+                  (click)="selectPatientForInvoiceFilter(p)"
+                >
+                  {{ p.fullName }} - {{ p.medicalRecordNumber }}
+                </button>
+              </div>
+              <small class="text-muted" *ngIf="loadingPatientFilterSearch">Searching patients...</small>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Status</label>
+              <select class="form-select" [(ngModel)]="statusFilter" (change)="applyInvoiceFilters()">
+                <option *ngFor="let s of statuses" [ngValue]="s.value">{{ s.label }}</option>
+              </select>
+            </div>
+            <div class="col-md-2"><label class="form-label">From</label><input type="date" class="form-control" [(ngModel)]="fromFilter" (change)="applyInvoiceFilters()" /></div>
+            <div class="col-md-2"><label class="form-label">To</label><input type="date" class="form-control" [(ngModel)]="toFilter" (change)="applyInvoiceFilters()" /></div>
+            <div class="col-md-2"><button type="button" class="btn btn-soft-secondary btn-sm" (click)="clearInvoiceFilters()">Clear</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table align-middle table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Patient</th>
+                  <th>Date</th>
+                  <th>Total</th>
+                  <th>Paid</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="invoicesLoading"><td colspan="7" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
+                <tr *ngIf="!invoicesLoading && invoices.length === 0"><td colspan="7" class="text-center py-4 text-muted">No invoices found.</td></tr>
+                <tr *ngFor="let inv of invoices">
+                  <td>{{ inv.invoiceNumber }}</td>
+                  <td>{{ getPatientName(inv.patientId) }}</td>
+                  <td>{{ inv.invoiceDate | date: 'mediumDate' }}</td>
+                  <td>{{ inv.totalAmount | number: '1.2-2' }}</td>
+                  <td>{{ inv.paidAmount | number: '1.2-2' }}</td>
+                  <td><span class="badge bg-info-subtle text-info">{{ getStatusLabel(inv.status) }}</span></td>
+                  <td class="text-end">
+                    <a
+                      class="btn btn-soft-warning btn-sm me-1"
+                      [routerLink]="['/patients', inv.patientId, 'billing']"
+                      title="Open patient billing"
+                    >
+                      Patient billing
+                    </a>
+                    <button type="button" class="btn btn-soft-primary btn-sm" (click)="viewInvoice(inv.id)">View</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-2">
+            <span class="text-muted">Showing {{ (invoicesPage - 1) * invoicesPageSize + 1 }}–{{ (invoicesPage - 1) * invoicesPageSize + invoices.length }} of {{ invoicesTotal }}</span>
+            <div class="btn-group btn-group-sm">
+              <button type="button" class="btn btn-soft-secondary" (click)="changeInvoicesPage(-1)"><i class="ri-arrow-left-s-line"></i></button>
+              <button type="button" class="btn btn-soft-secondary disabled">Page {{ invoicesPage }}</button>
+              <button type="button" class="btn btn-soft-secondary" (click)="changeInvoicesPage(1)"><i class="ri-arrow-right-s-line"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</div>
+
+<!-- ========== SERVICES TAB ========== -->
+<div *ngIf="viewMode === 'services'">
+  <!-- Form: add or edit service (always visible at top) -->
+  <div class="card mb-3">
+    <div class="card-header d-flex align-items-center justify-content-between">
+      <h5 class="card-title mb-0">{{ editingServiceId == null ? 'Add service' : 'Edit service' }}</h5>
+      <button type="button" class="btn btn-soft-secondary btn-sm" (click)="openNewService()" *ngIf="editingServiceId != null">
+        <i class="ri-add-line me-1"></i> New service
+      </button>
+    </div>
+    <form [formGroup]="serviceForm" (ngSubmit)="submitService()">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3" *ngIf="editingServiceId == null">
+            <label class="form-label">Code</label>
+            <input type="text" class="form-control" formControlName="code" placeholder="e.g. CONSULT" />
+          </div>
+          <div class="col-md-3" *ngIf="editingServiceId != null">
+            <label class="form-label">Code</label>
+            <input type="text" class="form-control" formControlName="code" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" formControlName="name" placeholder="Service name" />
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Price</label>
+            <input type="number" step="0.01" class="form-control" formControlName="price" />
+          </div>
+          <div class="col-md-2" *ngIf="editingServiceId != null">
+            <label class="form-label">Status</label>
+            <div class="form-check form-switch mt-2">
+              <input type="checkbox" class="form-check-input" id="isActive" formControlName="isActive" />
+              <label class="form-check-label" for="isActive">Active</label>
+            </div>
+          </div>
+          <div class="col-md-2 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="button" class="btn btn-soft-secondary" (click)="cancelServiceEdit()" *ngIf="editingServiceId != null">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- List of services (filters + table) -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Search</label>
+          <input type="text" class="form-control" placeholder="Code or name..." [(ngModel)]="servicesSearch" (ngModelChange)="onServicesSearch()" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="servicesActiveFilter" (change)="applyServiceFilters()">
+            <option [ngValue]="null">All</option>
+            <option [ngValue]="true">Active</option>
+            <option [ngValue]="false">Inactive</option>
+          </select>
+        </div>
+        <div class="col-md-2"><button type="button" class="btn btn-soft-secondary btn-sm" (click)="applyServiceFilters()">Apply</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h5 class="card-title mb-0">Service list</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0">
+          <thead class="table-light">
+            <tr><th>Code</th><th>Name</th><th>Price</th><th>Status</th><th class="text-end">Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="servicesLoading"><td colspan="5" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>
+            <tr *ngIf="!servicesLoading && services.length === 0"><td colspan="5" class="text-center py-4 text-muted">No services found. Use the form above to add one.</td></tr>
+            <tr *ngFor="let s of services">
+              <td>{{ s.code }}</td>
+              <td>{{ s.name }}</td>
+              <td>{{ s.price | number: '1.2-2' }}</td>
+              <td><span class="badge" [ngClass]="s.isActive ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">{{ s.isActive ? 'Active' : 'Inactive' }}</span></td>
+              <td class="text-end">
+                <button type="button" class="btn btn-soft-primary btn-sm me-1" (click)="openEditService(s)"><i class="ri-edit-line"></i></button>
+                <button type="button" class="btn btn-soft-danger btn-sm" (click)="deleteService(s)"><i class="ri-delete-bin-line"></i></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mt-2">
+        <span class="text-muted">Showing {{ (servicesPage - 1) * servicesPageSize + 1 }}–{{ (servicesPage - 1) * servicesPageSize + services.length }} of {{ servicesTotal }}</span>
+        <div class="btn-group btn-group-sm">
+          <button type="button" class="btn btn-soft-secondary" (click)="changeServicesPage(-1)"><i class="ri-arrow-left-s-line"></i></button>
+          <button type="button" class="btn btn-soft-secondary disabled">Page {{ servicesPage }}</button>
+          <button type="button" class="btn btn-soft-secondary" (click)="changeServicesPage(1)"><i class="ri-arrow-right-s-line"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,39 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Slope Charts" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Syncing Chart</h4>
+            </div>
+
+            <div class="card-body">
+                <div id="syncingchart-line" class="apex-charts" dir="ltr">
+                    <apx-chart [series]="SyncingLineChart.series" [chart]="SyncingLineChart.chart"
+                        [colors]="SyncingLineChart.colors" [plotOptions]="SyncingLineChart.plotOptions" dir="ltr"
+                        class="apex-charts"></apx-chart>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Multi Group</h4>
+            </div>
+  
+            <div class="card-body">
+                <apx-chart [series]="multipleRadialbarChart.series" [chart]="multipleRadialbarChart.chart"
+                [colors]="multipleRadialbarChart.colors" [plotOptions]="multipleRadialbarChart.plotOptions"
+                [tooltip]="multipleRadialbarChart.tooltip" [dataLabels]="multipleRadialbarChart.dataLabels"
+                [xaxis]="multipleRadialbarChart.xaxis" [yaxis]="multipleRadialbarChart.yaxis"
+                [legend]="multipleRadialbarChart.legend" [stroke]="multipleRadialbarChart.stroke" dir="ltr" class="apex-charts"></apx-chart>
+            </div>
+        </div>
+    </div>
+
+</div>

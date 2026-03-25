@@ -1,0 +1,63 @@
+.card {
+  box-shadow: 0 0.15rem 0.3rem rgba(15, 23, 42, 0.08);
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  /* Hide everything except the report wrapper */
+  body * {
+    visibility: hidden;
+  }
+
+  .report-print-wrapper,
+  .report-print-wrapper * {
+    visibility: visible;
+  }
+
+  .report-print-wrapper {
+    position: absolute;
+    inset: 0.5cm;
+  }
+
+  nav,
+  header,
+  footer {
+    display: none !important;
+  }
+
+  .card {
+    box-shadow: none;
+    border: none;
+  }
+
+  .report-table {
+    font-size: 12px;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .btn,
+  nav,
+  header,
+  footer {
+    display: none !important;
+  }
+
+  .card {
+    box-shadow: none;
+    border: none;
+  }
+
+  .report-table {
+    font-size: 12px;
+  }
+}
+
+

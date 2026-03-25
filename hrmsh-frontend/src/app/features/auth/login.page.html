@@ -1,0 +1,132 @@
+<div class="auth-page-wrapper pt-5">
+  <div class="auth-one-bg-position auth-one-bg" id="auth-particles">
+    <div class="bg-overlay"></div>
+    <div class="shape">
+      <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1440 120">
+        <path d="M 0,36 C 144,53.6 432,123.2 720,124 C 1008,124.8 1296,56.8 1440,40L1440 140L0 140z"></path>
+      </svg>
+    </div>
+  </div>
+
+  <div class="auth-page-content">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="text-center mt-sm-5 mb-4 text-white-50">
+            <a routerLink="/dashboard" class="d-inline-block auth-logo">
+              <span class="fs-2 fw-bold text-white">{{ 'layout.brand' | t }}</span>
+            </a>
+            <p class="mt-3 fs-15 fw-medium">
+              {{ 'app.tagline' | t }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6 col-xl-5">
+          <div class="card mt-4">
+            <div class="card-body p-4">
+              <div class="text-center mt-2">
+                <h5 class="text-primary">
+                  {{ 'auth.login.welcomeTitle' | t }}
+                </h5>
+                <p class="text-muted">
+                  {{ 'auth.login.subtitle' | t }}
+                </p>
+              </div>
+              <form [formGroup]="form" (ngSubmit)="submit()" class="p-2 mt-4">
+                <div class="mb-3">
+                  <label for="email" class="form-label">
+                    {{ 'auth.login.email' | t }}
+                  </label>
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="email"
+                    [placeholder]="'auth.login.emailPlaceholder' | t"
+                    formControlName="email"
+                    [class.is-invalid]="form.get('email')?.invalid && form.get('email')?.touched"
+                  />
+                  @if (form.get('email')?.invalid && form.get('email')?.touched) {
+                    <div class="invalid-feedback">
+                      @if (form.get('email')?.errors?.['required']) {
+                        <span>{{ 'auth.login.emailRequired' | t }}</span>
+                      }
+                      @if (form.get('email')?.errors?.['email']) {
+                        <span>{{ 'auth.login.emailInvalid' | t }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+                <div class="mb-3">
+                  <label for="password-input" class="form-label">
+                    {{ 'auth.login.password' | t }}
+                  </label>
+                  <input
+                    [type]="showPassword ? 'text' : 'password'"
+                    class="form-control"
+                    [placeholder]="'auth.login.passwordPlaceholder' | t"
+                    id="password-input"
+                    formControlName="password"
+                    [class.is-invalid]="
+                      form.get('password')?.invalid &&
+                      form.get('password')?.touched
+                    "
+                  />
+                  @if (form.get('password')?.invalid && form.get('password')?.touched) {
+                    <div class="invalid-feedback">
+                      {{ 'auth.login.passwordRequired' | t }}
+                    </div>
+                  }
+                </div>
+                @if (errorMessage) {
+                  <div class="alert alert-danger mb-3" role="alert">
+                    {{ errorMessage }}
+                  </div>
+                }
+                <div class="mt-4">
+                  <button
+                    class="btn btn-success w-100"
+                    type="submit"
+                    [disabled]="loading"
+                  >
+                    <span *ngIf="!loading; else loadingTpl">
+                      {{ 'auth.login.submit' | t }}
+                    </span>
+                    <ng-template #loadingTpl>
+                      {{ 'auth.login.loading' | t }}
+                    </ng-template>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="mt-4 text-center">
+            <p class="mb-0">
+              {{ 'auth.login.noAccount' | t }}
+              <a
+                routerLink="/dashboard"
+                class="fw-semibold text-primary text-decoration-underline"
+              >
+                {{ 'auth.login.goToDashboard' | t }}
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="text-center">
+            <p class="mb-0 text-muted">
+              &copy; {{ year }} {{ 'layout.brand' | t }}. {{ 'app.tagline' | t }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>

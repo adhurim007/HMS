@@ -1,0 +1,185 @@
+<div class="row mb-3">
+  <div class="col">
+    <h4 class="mb-0">Pharmacy - Stock</h4>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-6">
+        <label class="form-label">Product</label>
+        <select
+          class="form-select"
+          [(ngModel)]="selectedProductId"
+          (change)="onProductChange()"
+        >
+          <option [ngValue]="null">Select product</option>
+          <option *ngFor="let p of products" [ngValue]="p.id">
+            {{ p.code }} - {{ p.name }}
+          </option>
+        </select>
+        <small class="text-muted" *ngIf="products.length === 0">
+          No products. Create them in
+          <a routerLink="/pharmacy/products" class="text-primary">Products</a>.
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row" *ngIf="selectedProductId">
+  <div class="col-lg-6">
+    <div class="card mb-3">
+      <div class="card-header">
+        <h5 class="card-title mb-0">New stock batch</h5>
+      </div>
+      <form [formGroup]="batchForm" (ngSubmit)="submitBatch()">
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Batch #</label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="batchNumber"
+              />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Expiry</label>
+              <input
+                type="date"
+                class="form-control"
+                formControlName="expiryDate"
+              />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Quantity</label>
+              <input
+                type="number"
+                class="form-control"
+                formControlName="quantity"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="card-footer d-flex justify-content-end">
+          <button type="submit" class="btn btn-primary btn-sm">
+            Add batch
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Record stock movement</h5>
+      </div>
+      <form [formGroup]="movementForm" (ngSubmit)="submitMovement()">
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Type</label>
+              <select class="form-select" formControlName="type">
+                <option [ngValue]="1">Purchase</option>
+                <option [ngValue]="2">Adjustment</option>
+                <option [ngValue]="3">Sale</option>
+                <option [ngValue]="4">Return</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Batch</label>
+              <select class="form-select" formControlName="stockBatchId">
+                <option [ngValue]="null">Any batch</option>
+                <option *ngFor="let b of batches" [ngValue]="b.id">
+                  {{ b.batchNumber || ('Batch #' + b.id) }}
+                  ({{ b.quantityOnHand }} units)
+                </option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Quantity</label>
+              <input
+                type="number"
+                class="form-control"
+                formControlName="quantity"
+              />
+            </div>
+            <div class="col-12" *ngIf="movementForm.value.type === 2">
+              <div class="form-check form-switch">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  id="adjustIncrease"
+                  formControlName="isIncreaseForAdjustment"
+                />
+                <label class="form-check-label" for="adjustIncrease">
+                  Increase quantity (uncheck to decrease)
+                </label>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Reason</label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="reason"
+                placeholder="Optional notes"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="card-footer d-flex justify-content-end">
+          <button type="submit" class="btn btn-primary btn-sm">
+            Record movement
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Stock batches</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table align-middle table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Batch #</th>
+                <th>Expiry</th>
+                <th>On hand</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="loadingBatches">
+                <td colspan="3" class="text-center py-4">
+                  <div class="spinner-border text-primary"></div>
+                </td>
+              </tr>
+              <tr *ngIf="!loadingBatches && batches.length === 0">
+                <td colspan="3" class="text-center py-4 text-muted">
+                  No batches for this product.
+                </td>
+              </tr>
+              <tr *ngFor="let b of batches">
+                <td>{{ b.batchNumber || '-' }}</td>
+                <td>
+                  {{
+                    b.expiryDate
+                      ? (b.expiryDate | date: 'mediumDate')
+                      : '-'
+                  }}
+                </td>
+                <td>{{ b.quantityOnHand }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

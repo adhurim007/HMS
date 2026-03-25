@@ -1,0 +1,43 @@
+/*
+  HRMSH - Velzon layout & components (no plugins)
+  Load after bootstrap.scss
+*/
+@import "fonts/fonts";
+
+// Structure
+@import "structure/topbar";
+@import "structure/page-head";
+@import "structure/footer";
+@import "structure/vertical";
+@import "structure/layouts";
+
+// Components (minimal set)
+@import "components/helper";
+@import "components/avatar";
+@import "components/accordion";
+@import "components/preloader";
+@import "components/forms";
+@import "components/widgets";
+@import "components/card";
+@import "components/buttons";
+@import "components/table";
+@import "components/dropdown";
+@import "components/nav";
+@import "components/badge";
+@import "components/breadcrumb";
+@import "components/modal";
+@import "components/pagination";
+@import "components/root";
+@import "components/reboot";
+@import "components/alerts";
+@import "components/form-control";
+@import "components/form-check";
+@import "components/type";
+@import "components/list-group";
+
+// Plugins (only scrollbar for sidebar)
+@import "plugins/custom-scrollbar";
+
+// Pages
+@import "pages/authentication";
+@import "pages/invoice";

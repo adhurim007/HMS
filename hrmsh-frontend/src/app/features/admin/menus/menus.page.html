@@ -1,0 +1,336 @@
+<div class="row">
+  <div class="col-12">
+    <div
+      class="page-title-box d-sm-flex align-items-center justify-content-between"
+    >
+      <h4 class="mb-sm-0">
+        {{ 'admin.menus.title' | t }}
+      </h4>
+      <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+          <li class="breadcrumb-item">
+            <a routerLink="/dashboard" class="text-reset">
+              {{ 'menu.dashboard' | t }}
+            </a>
+          </li>
+          <li class="breadcrumb-item active">
+            {{ 'admin.menus.title' | t }}
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Menus CRUD & nested structure -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          {{ 'admin.menus.menus' | t }}
+        </h5>
+        <button
+          class="btn btn-sm btn-soft-primary"
+          type="button"
+          (click)="openCreate()"
+        >
+          <i class="ri-add-line me-1"></i>
+          {{ 'admin.menus.newMenu' | t }}
+        </button>
+      </div>
+      <div class="card-body">
+        <div *ngIf="loadingMenus" class="text-center py-3">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+
+        <div class="table-responsive mb-3" *ngIf="menuTree.length > 0">
+          <table class="table table-sm table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>{{ 'admin.menus.menuName' | t }}</th>
+                <th>Key</th>
+                <th>Path</th>
+                <th class="text-end">
+                  {{ 'admin.menus.actions' | t }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <ng-container *ngFor="let m of menuTree">
+                <tr>
+                  <td class="fw-semibold">
+                    {{ m.name }}
+                  </td>
+                  <td class="font-monospace small">{{ m.menuKey }}</td>
+                  <td class="small">{{ m.url }}</td>
+                  <td class="text-end">
+                    <button
+                      type="button"
+                      class="btn btn-soft-secondary btn-sm me-1"
+                      (click)="openEdit(m)"
+                    >
+                      <i class="ri-edit-2-line"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-soft-danger btn-sm"
+                      (click)="deleteMenu(m)"
+                    >
+                      <i class="ri-delete-bin-line"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngFor="let c of m.children">
+                  <td>
+                    <span class="ms-3">└ {{ c.name }}</span>
+                  </td>
+                  <td class="font-monospace small">{{ c.menuKey }}</td>
+                  <td class="small">{{ c.url }}</td>
+                  <td class="text-end">
+                    <button
+                      type="button"
+                      class="btn btn-soft-secondary btn-sm me-1"
+                      (click)="openEdit(c)"
+                    >
+                      <i class="ri-edit-2-line"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-soft-danger btn-sm"
+                      (click)="deleteMenu(c)"
+                    >
+                      <i class="ri-delete-bin-line"></i>
+                    </button>
+                  </td>
+                </tr>
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          *ngIf="!loadingMenus && menuTree.length === 0"
+          class="text-center text-muted mb-3"
+        >
+          {{ 'admin.menus.noMenus' | t }}
+        </div>
+
+        <form [formGroup]="menuForm" (ngSubmit)="submitMenu()">
+          <h6 class="mb-3">
+            {{
+              editingId == null
+                ? ('admin.menus.newMenu' | t)
+                : ('admin.menus.editMenu' | t)
+            }}
+          </h6>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label">
+                {{ 'admin.menus.menuName' | t }}
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="name"
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">
+                {{ 'admin.menus.menuKey' | t }}
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="menuKey"
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">
+                {{ 'admin.menus.url' | t }}
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="url"
+                placeholder="/dashboard"
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">
+                {{ 'admin.menus.parent' | t }}
+              </label>
+              <select class="form-select" formControlName="parentId">
+                <option [ngValue]="null">
+                  {{ 'admin.menus.noParent' | t }}
+                </option>
+                <option
+                  *ngFor="let m of menus"
+                  [ngValue]="m.id"
+                >
+                  {{ m.name }}
+                </option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">
+                {{ 'admin.menus.displayOrder' | t }}
+              </label>
+              <input
+                type="number"
+                class="form-control"
+                formControlName="displayOrder"
+              />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">
+                {{ 'admin.menus.icon' | t }}
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="icon"
+                placeholder="ri-dashboard-2-line"
+              />
+            </div>
+            <div class="col-md-4 d-flex align-items-center">
+              <div class="form-check mt-3">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  id="menuActive"
+                  formControlName="isActive"
+                />
+                <label for="menuActive" class="form-check-label">
+                  {{ 'admin.menus.active' | t }}
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex justify-content-end mt-3">
+            <button
+              class="btn btn-primary"
+              type="submit"
+              [disabled]="savingMenu"
+            >
+              <span *ngIf="!savingMenu; else savingTpl">
+                {{ 'common.save' | t }}
+              </span>
+              <ng-template #savingTpl>
+                {{ 'admin.menus.savingMenu' | t }}
+              </ng-template>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Role / menu assignment -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          {{ 'admin.menus.roleAssignment' | t }}
+        </h5>
+      </div>
+      <div class="card-body">
+        <div *ngIf="loadingRoles" class="text-center py-3">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">
+            {{ 'admin.menus.selectRole' | t }}
+          </label>
+          <select
+            class="form-select"
+            [ngModel]="selectedRoleId"
+            (ngModelChange)="selectRole($any($event))"
+          >
+            <option [ngValue]="null">
+              {{ 'admin.menus.selectRolePlaceholder' | t }}
+            </option>
+            <option *ngFor="let r of roles" [ngValue]="r.id">
+              {{ r.name }}
+            </option>
+          </select>
+        </div>
+
+        <div *ngIf="selectedRoleId && loadingRoleMenus" class="text-center py-3">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+
+        <div
+          *ngIf="selectedRoleId && !loadingRoleMenus"
+          class="table-responsive mb-3"
+        >
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 40%">
+                  {{ 'admin.menus.menuName' | t }}
+                </th>
+                <th>
+                  {{ 'admin.menus.allowed' | t }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let m of roleMenus"
+              >
+                <td>
+                  <span *ngIf="m.parentId" class="ms-3">└ {{ m.name }}</span>
+                  <span *ngIf="!m.parentId">{{ m.name }}</span>
+                </td>
+                <td>
+                  <div class="form-check">
+                    <input
+                      type="checkbox"
+                      class="form-check-input"
+                      [checked]="m.isAssigned"
+                      (change)="toggleMenuForRole(m, $any($event.target).checked)"
+                    />
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          *ngIf="selectedRoleId && !loadingRoleMenus"
+          class="d-flex justify-content-end mt-3"
+        >
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="saveRoleMenus()"
+            [disabled]="savingRoleMenus"
+          >
+            <span *ngIf="!savingRoleMenus; else savingRoleTpl">
+              {{ 'admin.menus.saveRoleMenus' | t }}
+            </span>
+            <ng-template #savingRoleTpl>
+              {{ 'admin.menus.savingRoleMenus' | t }}
+            </ng-template>
+          </button>
+        </div>
+
+        <div
+          *ngIf="!selectedRoleId && !loadingRoles"
+          class="text-muted text-center"
+        >
+          {{ 'admin.menus.selectRoleHint' | t }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

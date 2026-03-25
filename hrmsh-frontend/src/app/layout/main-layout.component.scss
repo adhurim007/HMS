@@ -1,0 +1,15 @@
+// Velzon layout is from theme; only overrides here if needed
+
+// Ensure sidebar menu scrolls when it grows beyond the viewport height.
+// `#scrollbar` is defined in main-layout.component.html.
+.app-menu #scrollbar {
+  height: 100%;
+  max-height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+// Improve scrolling on iOS devices.
+.app-menu #scrollbar {
+  -webkit-overflow-scrolling: touch;
+}

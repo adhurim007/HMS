@@ -1,0 +1,204 @@
+<div class="row">
+  <div class="col-12">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+      <h4 class="mb-sm-0">Users</h4>
+      <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+          <li class="breadcrumb-item">
+            <a routerLink="/dashboard" class="text-reset">Dashboard</a>
+          </li>
+          <li class="breadcrumb-item active">Users</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Create New User</h5>
+      </div>
+      <div class="card-body">
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input
+              type="email"
+              id="email"
+              class="form-control"
+              placeholder="user@example.com"
+              formControlName="email"
+              [class.is-invalid]="form.get('email')?.invalid && form.get('email')?.touched"
+            />
+            @if (form.get('email')?.invalid && form.get('email')?.touched) {
+              <div class="invalid-feedback">
+                @if (form.get('email')?.errors?.['required']) {
+                  <span>Email is required</span>
+                }
+                @if (form.get('email')?.errors?.['email']) {
+                  <span>Email must be valid</span>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input
+              type="password"
+              id="password"
+              class="form-control"
+              placeholder="Enter password"
+              formControlName="password"
+              [class.is-invalid]="form.get('password')?.invalid && form.get('password')?.touched"
+            />
+            @if (form.get('password')?.invalid && form.get('password')?.touched) {
+              <div class="invalid-feedback">Password is required</div>
+            }
+          </div>
+
+          <div class="mb-3">
+            <label for="role" class="form-label">Role</label>
+            <select
+              id="role"
+              class="form-select"
+              formControlName="role"
+              [class.is-invalid]="form.get('role')?.invalid && form.get('role')?.touched"
+            >
+              <option value="" disabled>Select role</option>
+              <option *ngFor="let r of roles" [value]="r.name">
+                {{ r.name }}
+              </option>
+            </select>
+            @if (form.get('role')?.invalid && form.get('role')?.touched) {
+              <div class="invalid-feedback">Role is required</div>
+            }
+          </div>
+
+          @if (successMessage) {
+            <div class="alert alert-success" role="alert">
+              {{ successMessage }}
+            </div>
+          }
+          @if (errorMessage) {
+            <div class="alert alert-danger" role="alert">
+              {{ errorMessage }}
+            </div>
+          }
+
+          <button class="btn btn-primary" type="submit" [disabled]="saving">
+            <span *ngIf="!saving; else savingTpl">Create User</span>
+            <ng-template #savingTpl>Creating...</ng-template>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h5 class="card-title mb-0">User accounts</h5>
+        <div class="d-flex gap-2">
+          <input
+            type="text"
+            class="form-control form-control-sm w-auto"
+            placeholder="Search by email..."
+            [(ngModel)]="userSearch"
+            (ngModelChange)="onUserSearchChange()"
+          />
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Id</th>
+                <th>Email</th>
+                <th>Roles</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="loadingUsers">
+                <td colspan="4" class="text-center py-4">
+                  <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="!loadingUsers && users.length === 0">
+                <td colspan="4" class="text-center py-4 text-muted">No users found.</td>
+              </tr>
+              <tr *ngFor="let u of users">
+                <td>{{ u.id }}</td>
+                <td>{{ u.email }}</td>
+                <td>
+                  <span class="badge bg-primary-subtle text-primary me-1" *ngFor="let r of u.roles">{{ r }}</span>
+                  <span *ngIf="!u.roles?.length" class="text-muted">—</span>
+                </td>
+                <td class="text-end">
+                  <button type="button" class="btn btn-soft-warning btn-sm" (click)="openResetModal(u)">
+                    Reset password
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="d-flex align-items-center justify-content-between mt-2">
+          <span class="text-muted small">
+            {{ totalCount }} user(s)
+          </span>
+          <div class="btn-group btn-group-sm" *ngIf="totalCount > 0">
+            <button type="button" class="btn btn-soft-secondary" (click)="changeUserPage(-1)">
+              <i class="ri-arrow-left-s-line"></i>
+            </button>
+            <span class="btn btn-soft-secondary disabled">Page {{ userPageNumber }}</span>
+            <button type="button" class="btn btn-soft-secondary" (click)="changeUserPage(1)">
+              <i class="ri-arrow-right-s-line"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reset password modal -->
+<div class="modal fade" [class.show]="showResetModal" [style.display]="showResetModal ? 'block' : 'none'" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reset password</h5>
+        <button type="button" class="btn-close" (click)="closeResetModal()"></button>
+      </div>
+      <div class="modal-body" *ngIf="resetUser">
+        <p class="text-muted mb-3">Set a new password for <strong>{{ resetUser.email }}</strong></p>
+        <div class="mb-3">
+          <label class="form-label">New password</label>
+          <input
+            type="password"
+            class="form-control"
+            [(ngModel)]="resetPasswordValue"
+            placeholder="Enter new password"
+          />
+        </div>
+        <div class="alert alert-danger py-2 mb-0" *ngIf="resetPasswordError">
+          {{ resetPasswordError }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-soft-secondary" (click)="closeResetModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="submitResetPassword()" [disabled]="resetPasswordSaving || !(resetPasswordValue || '').trim()">
+          <span *ngIf="!resetPasswordSaving">Reset password</span>
+          <span *ngIf="resetPasswordSaving">Saving...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

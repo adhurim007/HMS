@@ -1,0 +1,15 @@
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\bin\Debug\net8.0\HrmsH.Application.deps.json
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\bin\Debug\net8.0\HrmsH.Application.dll
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\bin\Debug\net8.0\HrmsH.Application.pdb
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\bin\Debug\net8.0\HrmsH.Domain.dll
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\bin\Debug\net8.0\HrmsH.Domain.pdb
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Debug\net8.0\HrmsH.Application.csproj.AssemblyReference.cache
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Debug\net8.0\HrmsH.Application.GeneratedMSBuildEditorConfig.editorconfig
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Debug\net8.0\HrmsH.Application.AssemblyInfoInputs.cache
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Debug\net8.0\HrmsH.Application.AssemblyInfo.cs
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Debug\net8.0\HrmsH.Application.csproj.CoreCompileInputs.cache
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Debug\net8.0\HrmsH.Ap.DE8FA3EB.Up2Date
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Debug\net8.0\HrmsH.Application.dll
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Debug\net8.0\refint\HrmsH.Application.dll
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Debug\net8.0\HrmsH.Application.pdb
+E:\GITHUB\Project\HRMSH\src\HrmsH.Application\obj\Debug\net8.0\ref\HrmsH.Application.dll

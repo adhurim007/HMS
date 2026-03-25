@@ -1,0 +1,31 @@
+.modal {
+  background-color: rgba(15, 23, 42, 0.35);
+}
+
+.modal-dialog {
+  max-width: 720px;
+}
+
+.modal-content {
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.25);
+}
+
+.cancel-appointment-modal .modal-dialog {
+  max-width: 520px;
+  width: calc(100% - 2rem);
+  margin: 1.75rem auto;
+}
+
+.calendar-slot-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  align-items: center;
+}
+
+.calendar-slot-btn {
+  min-width: 58px;
+  white-space: nowrap;
+  padding: 0.15rem 0.35rem;
+}
+

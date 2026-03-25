@@ -1,0 +1,214 @@
+<div class="row">
+  <div class="col-12">
+    <div
+      class="page-title-box d-sm-flex align-items-center justify-content-between"
+    >
+      <h4 class="mb-sm-0">Service configuration</h4>
+      <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+          <li class="breadcrumb-item">
+            <a routerLink="/dashboard" class="text-reset">Dashboard</a>
+          </li>
+          <li class="breadcrumb-item active">Service configuration</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <ul class="nav nav-pills bg-light rounded mb-3">
+      <li class="nav-item">
+        <button
+          type="button"
+          class="nav-link"
+          [class.active]="activeTab === 'department'"
+          (click)="setTab('department')"
+        >
+          By department
+        </button>
+      </li>
+      <li class="nav-item">
+        <button
+          type="button"
+          class="nav-link"
+          [class.active]="activeTab === 'doctor'"
+          (click)="setTab('doctor')"
+        >
+          By doctor
+        </button>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="row" *ngIf="activeTab === 'department'">
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Select department</h5>
+      </div>
+      <div class="card-body">
+        <label class="form-label">Department</label>
+        <select
+          class="form-select"
+          [(ngModel)]="selectedDepartmentId"
+          (change)="onDepartmentChange()"
+        >
+          <option [ngValue]="null">Choose department...</option>
+          <option *ngFor="let d of departments" [ngValue]="d.id">
+            {{ d.name }}
+          </option>
+        </select>
+        <p class="text-muted mt-2 mb-0">
+          Assign services that are generally available for this department.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between">
+        <h5 class="card-title mb-0">Services for department</h5>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          (click)="saveDept()"
+          [disabled]="!selectedDepartmentId || savingDept"
+        >
+          <span *ngIf="!savingDept">Save</span>
+          <span *ngIf="savingDept">Saving...</span>
+        </button>
+      </div>
+      <div class="card-body">
+        <div *ngIf="!selectedDepartmentId" class="text-muted">
+          Choose a department to manage its services.
+        </div>
+        <div *ngIf="selectedDepartmentId">
+          <div *ngIf="loadingDept" class="text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+          <div class="table-responsive" *ngIf="!loadingDept">
+            <table class="table table-sm align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 40px"></th>
+                  <th>Code</th>
+                  <th>Name</th>
+                  <th class="text-end">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let s of services">
+                  <td>
+                    <input
+                      type="checkbox"
+                      class="form-check-input"
+                      [checked]="deptSelectedIds.has(s.id)"
+                      (change)="toggleDeptService(s.id, $any($event.target).checked)"
+                    />
+                  </td>
+                  <td>{{ s.code }}</td>
+                  <td>{{ s.name }}</td>
+                  <td class="text-end">
+                    {{ s.price | number : '1.2-2' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row" *ngIf="activeTab === 'doctor'">
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Select doctor</h5>
+      </div>
+      <div class="card-body">
+        <label class="form-label">Doctor</label>
+        <select
+          class="form-select"
+          [(ngModel)]="selectedDoctorId"
+          (change)="onDoctorChange()"
+        >
+          <option [ngValue]="null">Choose doctor...</option>
+          <option *ngFor="let d of doctors" [ngValue]="d.staffMemberId">
+            {{ d.fullName }}
+          </option>
+        </select>
+        <p class="text-muted mt-2 mb-0">
+          Assign extra services specific to this doctor (in addition to
+          department services).
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between">
+        <h5 class="card-title mb-0">Services for doctor</h5>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          (click)="saveDoctor()"
+          [disabled]="!selectedDoctorId || savingDoctor"
+        >
+          <span *ngIf="!savingDoctor">Save</span>
+          <span *ngIf="savingDoctor">Saving...</span>
+        </button>
+      </div>
+      <div class="card-body">
+        <div *ngIf="!selectedDoctorId" class="text-muted">
+          Choose a doctor to manage their services.
+        </div>
+        <div *ngIf="selectedDoctorId">
+          <div *ngIf="loadingDoctor" class="text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+          <div class="table-responsive" *ngIf="!loadingDoctor">
+            <table class="table table-sm align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 40px"></th>
+                  <th>Code</th>
+                  <th>Name</th>
+                  <th class="text-end">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let s of services">
+                  <td>
+                    <input
+                      type="checkbox"
+                      class="form-check-input"
+                      [checked]="doctorSelectedIds.has(s.id)"
+                      (change)="toggleDoctorService(s.id, $any($event.target).checked)"
+                    />
+                  </td>
+                  <td>{{ s.code }}</td>
+                  <td>{{ s.name }}</td>
+                  <td class="text-end">
+                    {{ s.price | number : '1.2-2' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,11 @@
+e:\GITHUB\Project\HRMSH\src\HrmsH.Domain\bin\Release\net8.0\HrmsH.Domain.deps.json
+e:\GITHUB\Project\HRMSH\src\HrmsH.Domain\bin\Release\net8.0\HrmsH.Domain.dll
+e:\GITHUB\Project\HRMSH\src\HrmsH.Domain\bin\Release\net8.0\HrmsH.Domain.pdb
+e:\GITHUB\Project\HRMSH\src\HrmsH.Domain\obj\Release\net8.0\HrmsH.Domain.GeneratedMSBuildEditorConfig.editorconfig
+e:\GITHUB\Project\HRMSH\src\HrmsH.Domain\obj\Release\net8.0\HrmsH.Domain.AssemblyInfoInputs.cache
+e:\GITHUB\Project\HRMSH\src\HrmsH.Domain\obj\Release\net8.0\HrmsH.Domain.AssemblyInfo.cs
+e:\GITHUB\Project\HRMSH\src\HrmsH.Domain\obj\Release\net8.0\HrmsH.Domain.csproj.CoreCompileInputs.cache
+e:\GITHUB\Project\HRMSH\src\HrmsH.Domain\obj\Release\net8.0\HrmsH.Domain.dll
+e:\GITHUB\Project\HRMSH\src\HrmsH.Domain\obj\Release\net8.0\refint\HrmsH.Domain.dll
+e:\GITHUB\Project\HRMSH\src\HrmsH.Domain\obj\Release\net8.0\HrmsH.Domain.pdb
+e:\GITHUB\Project\HRMSH\src\HrmsH.Domain\obj\Release\net8.0\ref\HrmsH.Domain.dll
