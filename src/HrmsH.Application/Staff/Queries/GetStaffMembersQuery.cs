@@ -8,6 +8,7 @@ namespace HrmsH.Application.Staff.Queries;
 public sealed record GetStaffMembersQuery(
     PaginationParams Pagination,
     StaffType? StaffType,
+    int? FacilityId,
     int? DepartmentId,
     bool? IsActive) : IRequest<PagedResult<StaffMemberDto>>;
 

@@ -20,6 +20,7 @@ public sealed class InvoiceDto
 {
     public int Id { get; init; }
     public required string InvoiceNumber { get; init; }
+    public int? FacilityId { get; init; }
     public int PatientId { get; init; }
     public DateTime InvoiceDate { get; init; }
     public decimal TotalAmount { get; init; }
@@ -31,6 +32,7 @@ public sealed class InvoiceDto
 public sealed class PaymentDto
 {
     public int Id { get; init; }
+    public int? FacilityId { get; init; }
     public int InvoiceId { get; init; }
     public int? InstallmentItemId { get; init; }
     public DateTime PaymentDate { get; init; }

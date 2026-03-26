@@ -10,6 +10,7 @@ export interface AppointmentsQuery {
   sortBy?: string | null;
   sortDesc?: boolean;
   search?: string | null;
+  facilityId?: number | null;
   patientId?: number | null;
   doctorId?: number | null;
   departmentId?: number | null;
@@ -34,6 +35,7 @@ export class AppointmentsService {
     if (query.search) {
       params['search'] = query.search;
     }
+    if (query.facilityId != null) params['facilityId'] = String(query.facilityId);
     if (query.patientId != null) params['patientId'] = String(query.patientId);
     if (query.doctorId != null) params['doctorId'] = String(query.doctorId);
     if (query.departmentId != null)
@@ -52,6 +54,7 @@ export class AppointmentsService {
   }
 
   createAppointment(payload: {
+    facilityId?: number | null;
     patientId: number;
     doctorId?: number | null;
     departmentId?: number | null;
@@ -67,6 +70,7 @@ export class AppointmentsService {
   updateAppointment(
     id: number,
     payload: {
+      facilityId?: number | null;
       doctorId?: number | null;
       departmentId?: number | null;
       scheduledStart: string;

@@ -4,6 +4,7 @@ namespace HrmsH.Domain.Diagnostics;
 
 public class LaboratoryOrder : BaseEntity
 {
+    public int? FacilityId { get; set; }
     public int PatientId { get; set; }
     public int? VisitId { get; set; }
     public int? ReferringDoctorId { get; set; } // StaffMemberId

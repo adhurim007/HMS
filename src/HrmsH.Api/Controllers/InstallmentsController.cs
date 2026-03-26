@@ -20,10 +20,11 @@ public sealed class InstallmentsController : ControllerBase
 
     [HttpGet("plans")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<InstallmentPlanDto>>>> GetPlans(
+        [FromQuery] int? facilityId = null,
         [FromQuery] int? patientId = null,
         [FromQuery] int? invoiceId = null)
     {
-        var list = await _mediator.Send(new GetInstallmentPlansQuery(patientId, invoiceId));
+        var list = await _mediator.Send(new GetInstallmentPlansQuery(facilityId, patientId, invoiceId));
         return Ok(ApiResponse<IReadOnlyList<InstallmentPlanDto>>.Ok(list));
     }
 
@@ -42,9 +43,9 @@ public sealed class InstallmentsController : ControllerBase
     }
 
     [HttpGet("patient-history/{patientId:int}")]
-    public async Task<ActionResult<ApiResponse<PatientPaymentHistoryDto>>> GetPatientHistory([FromRoute] int patientId)
+    public async Task<ActionResult<ApiResponse<PatientPaymentHistoryDto>>> GetPatientHistory([FromRoute] int patientId, [FromQuery] int? facilityId = null)
     {
-        var dto = await _mediator.Send(new GetPatientPaymentHistoryQuery(patientId));
+        var dto = await _mediator.Send(new GetPatientPaymentHistoryQuery(patientId, facilityId));
         return Ok(ApiResponse<PatientPaymentHistoryDto>.Ok(dto));
     }
 }

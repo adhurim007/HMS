@@ -1,4 +1,5 @@
 using HrmsH.Application.Abstractions;
+using HrmsH.Application.Common.Interfaces;
 using HrmsH.Application.Common.Models;
 using HrmsH.Application.Organization.Dtos;
 using MediatR;
@@ -9,14 +10,23 @@ namespace HrmsH.Application.Organization.Departments.Queries;
 public sealed class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, PagedResult<DepartmentDto>>
 {
     private readonly IHrmsDbContext _db;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetDepartmentsQueryHandler(IHrmsDbContext db) => _db = db;
+    public GetDepartmentsQueryHandler(IHrmsDbContext db, ICurrentUserService currentUser)
+    {
+        _db = db;
+        _currentUser = currentUser;
+    }
 
     public async Task<PagedResult<DepartmentDto>> Handle(GetDepartmentsQuery request, CancellationToken cancellationToken)
     {
         var p = request.Pagination;
 
         var query = _db.Departments.AsNoTracking();
+        if (!_currentUser.IsSuperAdmin && _currentUser.HospitalId is int hospitalId)
+        {
+            query = query.Where(x => _db.Facilities.Any(f => f.Id == x.FacilityId && f.HospitalId == hospitalId));
+        }
 
         if (request.FacilityId is int facilityId)
         {

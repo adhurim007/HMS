@@ -5,6 +5,7 @@ namespace HrmsH.Domain.Billing;
 public class Invoice : BaseEntity
 {
     public string InvoiceNumber { get; set; } = default!;
+    public int? FacilityId { get; set; }
     public int PatientId { get; set; }
     public DateTime InvoiceDate { get; set; } = DateTime.UtcNow;
 

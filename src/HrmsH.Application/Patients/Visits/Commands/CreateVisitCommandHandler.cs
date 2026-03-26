@@ -1,5 +1,6 @@
 using HrmsH.Application.Abstractions;
 using HrmsH.Application.Common.Exceptions;
+using HrmsH.Application.Common.Interfaces;
 using HrmsH.Application.Patients.Visits.Dtos;
 using HrmsH.Domain.Patients;
 using MediatR;
@@ -10,17 +11,32 @@ namespace HrmsH.Application.Patients.Visits.Commands;
 public sealed class CreateVisitCommandHandler : IRequestHandler<CreateVisitCommand, VisitDto>
 {
     private readonly IHrmsDbContext _db;
+    private readonly IFacilityContextService _facilityContext;
 
-    public CreateVisitCommandHandler(IHrmsDbContext db) => _db = db;
+    public CreateVisitCommandHandler(IHrmsDbContext db, IFacilityContextService facilityContext)
+    {
+        _db = db;
+        _facilityContext = facilityContext;
+    }
 
     public async Task<VisitDto> Handle(CreateVisitCommand request, CancellationToken cancellationToken)
     {
         var patientExists = await _db.Patients.AnyAsync(x => x.Id == request.PatientId, cancellationToken);
         if (!patientExists)
             throw new NotFoundException("Patient not found.");
+        var facilityId = request.FacilityId ?? _facilityContext.ActiveFacilityId;
+        if (request.DoctorId.HasValue && facilityId.HasValue)
+        {
+            var assignedToFacility = await _db.StaffFacilityAssignments
+                .AsNoTracking()
+                .AnyAsync(x => x.StaffMemberId == request.DoctorId.Value && x.FacilityId == facilityId.Value, cancellationToken);
+            if (!assignedToFacility)
+                throw new InvalidOperationException("Doctor is not assigned to the selected facility.");
+        }
 
         var entity = new Visit
         {
+            FacilityId = facilityId,
             PatientId = request.PatientId,
             DoctorId = request.DoctorId,
             VisitDate = request.VisitDate ?? DateTime.UtcNow,
@@ -63,6 +79,7 @@ public sealed class CreateVisitCommandHandler : IRequestHandler<CreateVisitComma
         return new VisitDto
         {
             Id = entity.Id,
+            FacilityId = entity.FacilityId,
             PatientId = entity.PatientId,
             DoctorId = entity.DoctorId,
             VisitDate = entity.VisitDate,

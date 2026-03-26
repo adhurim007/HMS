@@ -41,6 +41,7 @@ export class FacilitiesService {
     name: string;
     code?: string | null;
     address?: string | null;
+    parentId?: number | null;
   }): Observable<FacilityDto> {
     return this.api
       .post<{ success: boolean; data: FacilityDto }>('Facilities', payload)
@@ -53,6 +54,7 @@ export class FacilitiesService {
       name: string;
       code?: string | null;
       address?: string | null;
+      parentId?: number | null;
     },
   ): Observable<FacilityDto> {
     return this.api

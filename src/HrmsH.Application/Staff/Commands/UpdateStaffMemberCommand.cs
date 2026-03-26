@@ -12,5 +12,6 @@ public sealed record UpdateStaffMemberCommand(
     string? Email,
     int? DepartmentId,
     int? UserId,
-    bool IsActive) : IRequest<StaffMemberDto>;
+    bool IsActive,
+    IReadOnlyList<int>? FacilityIds) : IRequest<StaffMemberDto>;
 

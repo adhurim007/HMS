@@ -14,6 +14,19 @@ public sealed class StaffMemberConfiguration : IEntityTypeConfiguration<StaffMem
     }
 }
 
+public sealed class StaffFacilityAssignmentConfiguration : IEntityTypeConfiguration<StaffFacilityAssignment>
+{
+    public void Configure(EntityTypeBuilder<StaffFacilityAssignment> builder)
+    {
+        builder.HasIndex(x => new { x.StaffMemberId, x.FacilityId }).IsUnique();
+
+        builder.HasOne(x => x.StaffMember)
+            .WithMany(x => x.FacilityAssignments)
+            .HasForeignKey(x => x.StaffMemberId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
 public sealed class DoctorProfileConfiguration : IEntityTypeConfiguration<DoctorProfile>
 {
     public void Configure(EntityTypeBuilder<DoctorProfile> builder)

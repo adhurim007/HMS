@@ -4,6 +4,7 @@ namespace HrmsH.Domain.Patients;
 
 public class Visit : BaseEntity
 {
+    public int? FacilityId { get; set; }
     public int PatientId { get; set; }
     public Patient Patient { get; set; } = default!;
 

@@ -10,6 +10,7 @@ public sealed class AppointmentConfiguration : IEntityTypeConfiguration<Appointm
     {
         builder.Property(x => x.Reason).HasMaxLength(500);
         builder.HasIndex(x => x.ScheduledStart);
+        builder.HasIndex(x => x.FacilityId);
     }
 }
 

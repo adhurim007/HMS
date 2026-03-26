@@ -39,6 +39,21 @@ public sealed class StockMovementConfiguration : IEntityTypeConfiguration<StockM
     {
         builder.Property(x => x.Reason).HasMaxLength(500);
         builder.HasIndex(x => x.MovementDate);
+        builder.HasIndex(x => x.FacilityId);
+    }
+}
+
+public sealed class PharmacyPurchaseInvoiceConfiguration : IEntityTypeConfiguration<PharmacyPurchaseInvoice>
+{
+    public void Configure(EntityTypeBuilder<PharmacyPurchaseInvoice> builder)
+    {
+        builder.Property(x => x.InvoiceNumber).IsRequired().HasMaxLength(50);
+        builder.Property(x => x.SupplierName).HasMaxLength(200);
+        builder.Property(x => x.SupplierReference).HasMaxLength(200);
+        builder.Property(x => x.TotalAmount).HasPrecision(18, 2);
+        builder.Property(x => x.PaidAmount).HasPrecision(18, 2);
+        builder.HasIndex(x => x.InvoiceNumber).IsUnique();
+        builder.HasIndex(x => x.FacilityId);
     }
 }
 

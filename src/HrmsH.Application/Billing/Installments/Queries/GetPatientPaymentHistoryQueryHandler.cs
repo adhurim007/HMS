@@ -1,5 +1,6 @@
 using HrmsH.Application.Abstractions;
 using HrmsH.Application.Billing.Installments.Dtos;
+using HrmsH.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,15 +9,22 @@ namespace HrmsH.Application.Billing.Installments.Queries;
 public sealed class GetPatientPaymentHistoryQueryHandler : IRequestHandler<GetPatientPaymentHistoryQuery, PatientPaymentHistoryDto>
 {
     private readonly IHrmsDbContext _db;
+    private readonly IFacilityContextService _facilityContext;
 
-    public GetPatientPaymentHistoryQueryHandler(IHrmsDbContext db) => _db = db;
+    public GetPatientPaymentHistoryQueryHandler(IHrmsDbContext db, IFacilityContextService facilityContext)
+    {
+        _db = db;
+        _facilityContext = facilityContext;
+    }
 
     public async Task<PatientPaymentHistoryDto> Handle(GetPatientPaymentHistoryQuery request, CancellationToken cancellationToken)
     {
+        var effectiveFacilityId = request.FacilityId ?? _facilityContext.ActiveFacilityId;
         var plans = await _db.InstallmentPlans
             .AsNoTracking()
             .Include(x => x.Items)
             .Where(x => x.PatientId == request.PatientId)
+            .Where(x => !effectiveFacilityId.HasValue || x.FacilityId == effectiveFacilityId.Value)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
@@ -27,6 +35,7 @@ public sealed class GetPatientPaymentHistoryQueryHandler : IRequestHandler<GetPa
                 i => i.Id,
                 (p, i) => new { p, i })
             .Where(x => x.i.PatientId == request.PatientId)
+            .Where(x => !effectiveFacilityId.HasValue || x.p.FacilityId == effectiveFacilityId.Value)
             .OrderByDescending(x => x.p.PaymentDate)
             .Select(x => new PaymentHistoryRowDto
             {

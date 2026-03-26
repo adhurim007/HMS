@@ -1,5 +1,6 @@
 using HrmsH.Application.Abstractions;
 using HrmsH.Application.Appointments.Dtos;
+using HrmsH.Application.Common.Interfaces;
 using HrmsH.Application.Common.Models;
 using HrmsH.Domain.Appointments;
 using MediatR;
@@ -10,10 +11,12 @@ namespace HrmsH.Application.Appointments.Queries;
 public sealed class GetAppointmentsQueryHandler : IRequestHandler<GetAppointmentsQuery, PagedResult<AppointmentDto>>
 {
     private readonly IHrmsDbContext _db;
+    private readonly IFacilityContextService _facilityContext;
 
-    public GetAppointmentsQueryHandler(IHrmsDbContext db)
+    public GetAppointmentsQueryHandler(IHrmsDbContext db, IFacilityContextService facilityContext)
     {
         _db = db;
+        _facilityContext = facilityContext;
     }
 
     public async Task<PagedResult<AppointmentDto>> Handle(GetAppointmentsQuery request, CancellationToken cancellationToken)
@@ -21,6 +24,9 @@ public sealed class GetAppointmentsQueryHandler : IRequestHandler<GetAppointment
         var p = request.Pagination;
 
         var query = _db.Appointments.AsNoTracking();
+        var effectiveFacilityId = request.FacilityId ?? _facilityContext.ActiveFacilityId;
+        if (effectiveFacilityId.HasValue)
+            query = query.Where(x => x.FacilityId == effectiveFacilityId.Value);
 
         if (request.PatientId is int patientId)
             query = query.Where(x => x.PatientId == patientId);
@@ -60,6 +66,7 @@ public sealed class GetAppointmentsQueryHandler : IRequestHandler<GetAppointment
             .Select(x => new AppointmentDto
             {
                 Id = x.Id,
+                FacilityId = x.FacilityId,
                 PatientId = x.PatientId,
                 DoctorId = x.DoctorId,
                 DepartmentId = x.DepartmentId,

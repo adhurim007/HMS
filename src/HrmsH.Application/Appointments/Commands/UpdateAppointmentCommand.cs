@@ -5,6 +5,7 @@ namespace HrmsH.Application.Appointments.Commands;
 
 public sealed record UpdateAppointmentCommand(
     int Id,
+    int? FacilityId,
     int? DoctorId,
     int? DepartmentId,
     DateTime ScheduledStart,

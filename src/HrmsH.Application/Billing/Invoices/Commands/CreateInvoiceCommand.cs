@@ -15,6 +15,7 @@ public sealed record InvoiceLineInput(
     decimal? LineCost = null);
 
 public sealed record CreateInvoiceCommand(
+    int? FacilityId,
     int PatientId,
     DateTime? InvoiceDate,
     IReadOnlyList<InvoiceLineInput> Items) : IRequest<InvoiceDto>;

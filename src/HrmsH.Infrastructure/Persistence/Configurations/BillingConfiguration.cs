@@ -25,6 +25,7 @@ public sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(x => x.TotalAmount).HasPrecision(18, 2);
         builder.Property(x => x.PaidAmount).HasPrecision(18, 2);
         builder.HasIndex(x => x.InvoiceNumber).IsUnique();
+        builder.HasIndex(x => x.FacilityId);
     }
 }
 
@@ -69,6 +70,7 @@ public sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(x => x.Amount).HasPrecision(18, 2);
         builder.Property(x => x.Method).HasMaxLength(50);
         builder.Property(x => x.Reference).HasMaxLength(200);
+        builder.HasIndex(x => x.FacilityId);
 
         builder.HasOne(x => x.Invoice)
             .WithMany(x => x.Payments)
@@ -87,6 +89,7 @@ public sealed class InstallmentPlanConfiguration : IEntityTypeConfiguration<Inst
     public void Configure(EntityTypeBuilder<InstallmentPlan> builder)
     {
         builder.Property(x => x.TotalAmount).HasPrecision(18, 2);
+        builder.HasIndex(x => x.FacilityId);
 
         builder.HasOne(x => x.Invoice)
             .WithMany(x => x.InstallmentPlans)
@@ -101,6 +104,7 @@ public sealed class InstallmentItemConfiguration : IEntityTypeConfiguration<Inst
     {
         builder.Property(x => x.Amount).HasPrecision(18, 2);
         builder.Property(x => x.PaidAmount).HasPrecision(18, 2);
+        builder.HasIndex(x => x.FacilityId);
 
         builder.HasOne(x => x.InstallmentPlan)
             .WithMany(x => x.Items)

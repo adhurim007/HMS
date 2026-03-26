@@ -3,6 +3,7 @@ export interface FacilityDto {
   name: string;
   code?: string;
   address?: string;
+  parentId?: number | null;
 }
 
 export interface PagedApiResponse<T> {

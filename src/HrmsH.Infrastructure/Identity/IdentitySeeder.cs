@@ -48,10 +48,28 @@ public static class IdentitySeeder
             await userManager.AddToRoleAsync(adminUser, SystemRoles.SuperAdmin);
         }
 
+        if (!await context.Hospitals.AnyAsync())
+        {
+            context.Hospitals.Add(new Hospital
+            {
+                Name = "Default Hospital",
+                Code = "DEF-H",
+                Address = "Main Street"
+            });
+            await context.SaveChangesAsync();
+        }
+
+        var defaultHospitalId = await context.Hospitals
+            .AsNoTracking()
+            .OrderBy(x => x.Id)
+            .Select(x => x.Id)
+            .FirstAsync();
+
         if (!await context.Facilities.AnyAsync())
         {
             context.Facilities.Add(new Facility
             {
+                HospitalId = defaultHospitalId,
                 Name = "Default Hospital",
                 Code = "DEF",
                 Address = "Main Street"

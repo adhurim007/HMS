@@ -29,6 +29,7 @@ public sealed class VisitsController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<PagedApiResponse<VisitListDto>>> GetList(
+        [FromQuery] int? facilityId = null,
         [FromQuery] int? patientId = null,
         [FromQuery] int? doctorId = null,
         [FromQuery] DateTime? from = null,
@@ -49,7 +50,7 @@ public sealed class VisitsController : ControllerBase
                 doctorId = staffId;
         }
 
-        var result = await _mediator.Send(new GetVisitsQuery(patientId, doctorId, from, to, page, pageSize, sortBy, sortDescending));
+        var result = await _mediator.Send(new GetVisitsQuery(facilityId, patientId, doctorId, from, to, page, pageSize, sortBy, sortDescending));
         return Ok(new PagedApiResponse<VisitListDto>
         {
             Success = true,

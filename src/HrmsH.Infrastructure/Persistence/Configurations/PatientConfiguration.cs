@@ -29,6 +29,7 @@ public sealed class VisitConfiguration : IEntityTypeConfiguration<Visit>
             .WithMany(x => x.Visits)
             .HasForeignKey(x => x.PatientId)
             .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(x => x.FacilityId);
     }
 }
 

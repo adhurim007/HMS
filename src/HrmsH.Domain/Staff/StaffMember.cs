@@ -14,5 +14,7 @@ public class StaffMember : BaseEntity
     public int? DepartmentId { get; set; }
 
     public bool IsActive { get; set; } = true;
+
+    public ICollection<StaffFacilityAssignment> FacilityAssignments { get; set; } = new List<StaffFacilityAssignment>();
 }
 

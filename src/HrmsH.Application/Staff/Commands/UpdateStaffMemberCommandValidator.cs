@@ -11,6 +11,9 @@ public sealed class UpdateStaffMemberCommandValidator : AbstractValidator<Update
         RuleFor(x => x.Phone).MaximumLength(50);
         RuleFor(x => x.Email).MaximumLength(200).EmailAddress()
             .When(x => !string.IsNullOrWhiteSpace(x.Email));
+        RuleForEach(x => x.FacilityIds!)
+            .GreaterThan(0)
+            .When(x => x.FacilityIds is not null);
     }
 }
 

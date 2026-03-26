@@ -5,6 +5,7 @@ using MediatR;
 namespace HrmsH.Application.Billing.Invoices.Queries;
 
 public sealed record GetInvoicesQuery(
+    int? FacilityId,
     int? PatientId,
     InvoiceStatus? Status,
     DateTime? From,
@@ -18,6 +19,7 @@ public sealed class InvoiceListDto
 {
     public int Id { get; init; }
     public required string InvoiceNumber { get; init; }
+    public int? FacilityId { get; init; }
     public int PatientId { get; init; }
     public DateTime InvoiceDate { get; init; }
     public decimal TotalAmount { get; init; }

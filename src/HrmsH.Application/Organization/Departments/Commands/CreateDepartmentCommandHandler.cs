@@ -1,5 +1,6 @@
 using HrmsH.Application.Abstractions;
 using HrmsH.Application.Common.Exceptions;
+using HrmsH.Application.Common.Interfaces;
 using HrmsH.Application.Organization.Dtos;
 using HrmsH.Domain.Organization;
 using MediatR;
@@ -10,8 +11,13 @@ namespace HrmsH.Application.Organization.Departments.Commands;
 public sealed class CreateDepartmentCommandHandler : IRequestHandler<CreateDepartmentCommand, DepartmentDto>
 {
     private readonly IHrmsDbContext _db;
+    private readonly ICurrentUserService _currentUser;
 
-    public CreateDepartmentCommandHandler(IHrmsDbContext db) => _db = db;
+    public CreateDepartmentCommandHandler(IHrmsDbContext db, ICurrentUserService currentUser)
+    {
+        _db = db;
+        _currentUser = currentUser;
+    }
 
     public async Task<DepartmentDto> Handle(CreateDepartmentCommand request, CancellationToken cancellationToken)
     {
@@ -20,6 +26,14 @@ public sealed class CreateDepartmentCommandHandler : IRequestHandler<CreateDepar
 
         if (!facilityExists)
             throw new NotFoundException("Facility not found.");
+        if (!_currentUser.IsSuperAdmin && _currentUser.HospitalId is int hospitalId)
+        {
+            var allowed = await _db.Facilities
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == request.FacilityId && x.HospitalId == hospitalId, cancellationToken);
+            if (!allowed)
+                throw new NotFoundException("Facility not found.");
+        }
 
         var entity = new Department
         {

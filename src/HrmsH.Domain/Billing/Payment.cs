@@ -4,6 +4,7 @@ namespace HrmsH.Domain.Billing;
 
 public class Payment : BaseEntity
 {
+    public int? FacilityId { get; set; }
     public int InvoiceId { get; set; }
     public Invoice Invoice { get; set; } = default!;
     public int? InstallmentItemId { get; set; }

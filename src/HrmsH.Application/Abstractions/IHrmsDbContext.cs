@@ -15,10 +15,12 @@ namespace HrmsH.Application.Abstractions;
 
 public interface IHrmsDbContext
 {
+    DbSet<Hospital> Hospitals { get; }
     DbSet<Facility> Facilities { get; }
     DbSet<Department> Departments { get; }
 
     DbSet<StaffMember> StaffMembers { get; }
+    DbSet<StaffFacilityAssignment> StaffFacilityAssignments { get; }
     DbSet<DoctorProfile> DoctorProfiles { get; }
 
     DbSet<Patient> Patients { get; }

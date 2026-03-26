@@ -96,6 +96,27 @@ public sealed class DoctorsController : ControllerBase
             UserName = request.Email.Trim(),
             Email = request.Email.Trim()
         };
+        if (_currentUser.IsSuperAdmin)
+        {
+            if (request.FacilityId is int facilityIdForSuper)
+            {
+                user.HospitalId = await _db.Facilities
+                    .AsNoTracking()
+                    .Where(f => f.Id == facilityIdForSuper)
+                    .Select(f => (int?)f.HospitalId)
+                    .FirstOrDefaultAsync();
+            }
+        }
+        else
+        {
+            user.HospitalId = await _db.Facilities
+                .AsNoTracking()
+                .Where(f => f.Id == request.FacilityId && f.HospitalId == _currentUser.HospitalId)
+                .Select(f => (int?)f.HospitalId)
+                .FirstOrDefaultAsync();
+            if (user.HospitalId is null)
+                return BadRequest(ApiResponse<DoctorDto>.Fail("Invalid facility for your hospital scope."));
+        }
         var createResult = await _userManager.CreateAsync(user, request.Password);
         if (!createResult.Succeeded)
             return BadRequest(ApiResponse<DoctorDto>.Fail("Failed to create account.", createResult.Errors));
@@ -114,7 +135,8 @@ public sealed class DoctorsController : ControllerBase
             string.IsNullOrWhiteSpace(request.Phone) ? null : request.Phone.Trim(),
             request.Email.Trim(),
             request.DepartmentId,
-            user.Id);
+            user.Id,
+            request.FacilityId is int facilityId ? new[] { facilityId } : null);
 
         var staffDto = await _mediator.Send(staffCommand);
         var profileCommand = new UpsertDoctorProfileCommand(
@@ -324,6 +346,7 @@ public sealed class CreateDoctorWithAccountRequest
     public required string Password { get; init; }
     public required string FullName { get; init; }
     public string? Phone { get; init; }
+    public int? FacilityId { get; init; }
     public int? DepartmentId { get; init; }
     public string? Specialty { get; init; }
     public string? LicenseNumber { get; init; }

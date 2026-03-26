@@ -36,6 +36,7 @@ public sealed class AppointmentsController : ControllerBase
         [FromQuery] string? sortBy = "date",
         [FromQuery] bool sortDesc = false,
         [FromQuery] string? search = null,
+        [FromQuery] int? facilityId = null,
         [FromQuery] int? patientId = null,
         [FromQuery] int? doctorId = null,
         [FromQuery] int? departmentId = null,
@@ -63,6 +64,7 @@ public sealed class AppointmentsController : ControllerBase
                 SortDesc = sortDesc,
                 Search = search
             },
+            facilityId,
             patientId,
             doctorId,
             departmentId,

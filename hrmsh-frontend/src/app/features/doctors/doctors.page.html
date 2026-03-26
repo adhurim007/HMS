@@ -32,10 +32,25 @@
             </div>
           </div>
           <div class="col-md-6">
+            <label class="form-label">Facility</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Select facility"
+              list="doctors-facility-form-list"
+              [(ngModel)]="facilityFormInput"
+              [ngModelOptions]="{ standalone: true }"
+              (change)="onFacilityFormInputChanged($any($event.target).value)"
+            />
+            <datalist id="doctors-facility-form-list">
+              <option *ngFor="let f of facilities" [value]="getFacilityOptionLabel(f)"></option>
+            </datalist>
+          </div>
+          <div class="col-md-6">
             <label class="form-label">Department</label>
             <select class="form-select" formControlName="departmentId">
               <option [ngValue]="null">No department</option>
-              <option *ngFor="let d of departments" [ngValue]="d.id">
+              <option *ngFor="let d of filteredDepartments" [ngValue]="d.id">
                 {{ d.name }}
               </option>
             </select>
@@ -285,6 +300,20 @@
           />
         </div>
         <div class="col-md-3">
+          <label class="form-label">Facility</label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="All facilities"
+            list="doctors-facility-filter-list"
+            [(ngModel)]="facilityFilterInput"
+            (change)="onFacilityFilterInputChanged($any($event.target).value)"
+          />
+          <datalist id="doctors-facility-filter-list">
+            <option *ngFor="let f of facilities" [value]="getFacilityOptionLabel(f)"></option>
+          </datalist>
+        </div>
+        <div class="col-md-3">
           <label class="form-label">Department</label>
           <select
             class="form-select"
@@ -292,7 +321,7 @@
             (change)="applyFilters()"
           >
             <option [ngValue]="null">All departments</option>
-            <option *ngFor="let d of departments" [ngValue]="d.id">
+            <option *ngFor="let d of departmentFilterOptions" [ngValue]="d.id">
               {{ d.name }}
             </option>
           </select>

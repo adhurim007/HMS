@@ -4,6 +4,7 @@ using MediatR;
 namespace HrmsH.Application.Appointments.Commands;
 
 public sealed record CreateAppointmentCommand(
+    int? FacilityId,
     int PatientId,
     int? DoctorId,
     int? DepartmentId,

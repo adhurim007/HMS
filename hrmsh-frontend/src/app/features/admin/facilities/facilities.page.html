@@ -74,18 +74,19 @@
                   Code
                   <i class="ri-arrow-up-down-line align-bottom ms-1"></i>
                 </th>
+                <th>Parent facility</th>
                 <th>Address</th>
                 <th class="text-end">Action</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngIf="!loading && facilities.length === 0">
-                <td colspan="4" class="text-center text-muted py-4">
+                <td colspan="5" class="text-center text-muted py-4">
                   No facilities found.
                 </td>
               </tr>
               <tr *ngIf="loading">
-                <td colspan="4" class="text-center py-4">
+                <td colspan="5" class="text-center py-4">
                   <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                   </div>
@@ -94,6 +95,7 @@
               <tr *ngFor="let f of facilities">
                 <td>{{ f.name }}</td>
                 <td>{{ f.code }}</td>
+                <td>{{ getParentName(f.parentId) }}</td>
                 <td>{{ f.address }}</td>
                 <td class="text-end">
                   <button
@@ -179,6 +181,21 @@
           class="form-control"
           formControlName="address"
         ></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Parent Facility (optional)</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="No parent (top-level)"
+          list="parent-facility-list"
+          [(ngModel)]="parentFacilityInput"
+          [ngModelOptions]="{ standalone: true }"
+          (change)="onParentFacilityChanged($any($event.target).value)"
+        />
+        <datalist id="parent-facility-list">
+          <option *ngFor="let p of getParentOptions(editingId)" [value]="getFacilityOptionLabel(p)"></option>
+        </datalist>
       </div>
       <div class="d-flex justify-content-end gap-2">
         <button

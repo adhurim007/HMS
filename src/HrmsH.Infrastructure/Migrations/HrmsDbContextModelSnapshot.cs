@@ -42,6 +42,9 @@ namespace HrmsH.Infrastructure.Migrations
                     b.Property<int?>("DoctorId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("FacilityId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -68,6 +71,8 @@ namespace HrmsH.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FacilityId");
 
                     b.HasIndex("ScheduledStart");
 
@@ -360,6 +365,9 @@ namespace HrmsH.Infrastructure.Migrations
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("FacilityId")
+                        .HasColumnType("int");
+
                     b.Property<int>("InstallmentPlanId")
                         .HasColumnType("int");
 
@@ -381,6 +389,8 @@ namespace HrmsH.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("FacilityId");
+
                     b.HasIndex("InstallmentPlanId");
 
                     b.ToTable("InstallmentItems");
@@ -399,6 +409,9 @@ namespace HrmsH.Infrastructure.Migrations
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("FacilityId")
+                        .HasColumnType("int");
 
                     b.Property<int>("InvoiceId")
                         .HasColumnType("int");
@@ -427,6 +440,8 @@ namespace HrmsH.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("FacilityId");
+
                     b.HasIndex("InvoiceId");
 
                     b.ToTable("InstallmentPlans");
@@ -445,6 +460,9 @@ namespace HrmsH.Infrastructure.Migrations
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("FacilityId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("InvoiceDate")
                         .HasColumnType("datetime2");
@@ -478,6 +496,8 @@ namespace HrmsH.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FacilityId");
 
                     b.HasIndex("InvoiceNumber")
                         .IsUnique();
@@ -579,6 +599,9 @@ namespace HrmsH.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("FacilityId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("InstallmentItemId")
                         .HasColumnType("int");
 
@@ -606,6 +629,8 @@ namespace HrmsH.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FacilityId");
 
                     b.HasIndex("InstallmentItemId");
 
@@ -734,6 +759,9 @@ namespace HrmsH.Infrastructure.Migrations
                     b.Property<DateTime?>("DeliveredAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("FacilityId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -782,6 +810,8 @@ namespace HrmsH.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FacilityId");
 
                     b.ToTable("LaboratoryOrders", (string)null);
                 });
@@ -1240,6 +1270,57 @@ namespace HrmsH.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("HospitalId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HospitalId");
+
+                    b.HasIndex("ParentId");
+
+                    b.ToTable("Facilities");
+                });
+
+            modelBuilder.Entity("HrmsH.Domain.Organization.Hospital", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -1256,7 +1337,11 @@ namespace HrmsH.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Facilities");
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasFilter("[Code] IS NOT NULL");
+
+                    b.ToTable("Hospitals");
                 });
 
             modelBuilder.Entity("HrmsH.Domain.Patients.Patient", b =>
@@ -1467,6 +1552,9 @@ namespace HrmsH.Infrastructure.Migrations
                     b.Property<int?>("DoctorId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("FacilityId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -1486,6 +1574,8 @@ namespace HrmsH.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FacilityId");
 
                     b.HasIndex("PatientId");
 
@@ -1556,29 +1646,37 @@ namespace HrmsH.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("FacilityId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("InvoiceDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<decimal>("PaidAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<string>("SupplierName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("SupplierReference")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -1588,6 +1686,11 @@ namespace HrmsH.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FacilityId");
+
+                    b.HasIndex("InvoiceNumber")
+                        .IsUnique();
 
                     b.ToTable("PharmacyPurchaseInvoices");
                 });
@@ -1767,6 +1870,9 @@ namespace HrmsH.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("FacilityId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -1796,6 +1902,8 @@ namespace HrmsH.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FacilityId");
 
                     b.HasIndex("MovementDate");
 
@@ -1924,6 +2032,55 @@ namespace HrmsH.Infrastructure.Migrations
                     b.ToTable("DoctorWeeklyScheduleDays", (string)null);
                 });
 
+            modelBuilder.Entity("HrmsH.Domain.Staff.StaffFacilityAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("FromDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("StaffMemberId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ToDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StaffMemberId", "FacilityId")
+                        .IsUnique();
+
+                    b.ToTable("StaffFacilityAssignments");
+                });
+
             modelBuilder.Entity("HrmsH.Domain.Staff.StaffMember", b =>
                 {
                     b.Property<int>("Id")
@@ -2028,6 +2185,9 @@ namespace HrmsH.Infrastructure.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<int?>("HospitalId")
+                        .HasColumnType("int");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -2411,6 +2571,24 @@ namespace HrmsH.Infrastructure.Migrations
                     b.Navigation("Facility");
                 });
 
+            modelBuilder.Entity("HrmsH.Domain.Organization.Facility", b =>
+                {
+                    b.HasOne("HrmsH.Domain.Organization.Hospital", "Hospital")
+                        .WithMany("Facilities")
+                        .HasForeignKey("HospitalId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HrmsH.Domain.Organization.Facility", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Hospital");
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("HrmsH.Domain.Patients.Prescription", b =>
                 {
                     b.HasOne("HrmsH.Domain.Staff.StaffMember", "Doctor")
@@ -2541,6 +2719,17 @@ namespace HrmsH.Infrastructure.Migrations
                     b.Navigation("StaffMember");
                 });
 
+            modelBuilder.Entity("HrmsH.Domain.Staff.StaffFacilityAssignment", b =>
+                {
+                    b.HasOne("HrmsH.Domain.Staff.StaffMember", "StaffMember")
+                        .WithMany("FacilityAssignments")
+                        .HasForeignKey("StaffMemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StaffMember");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
                     b.HasOne("HrmsH.Infrastructure.Persistence.ApplicationRole", null)
@@ -2635,7 +2824,14 @@ namespace HrmsH.Infrastructure.Migrations
 
             modelBuilder.Entity("HrmsH.Domain.Organization.Facility", b =>
                 {
+                    b.Navigation("Children");
+
                     b.Navigation("Departments");
+                });
+
+            modelBuilder.Entity("HrmsH.Domain.Organization.Hospital", b =>
+                {
+                    b.Navigation("Facilities");
                 });
 
             modelBuilder.Entity("HrmsH.Domain.Patients.Patient", b =>
@@ -2656,6 +2852,11 @@ namespace HrmsH.Infrastructure.Migrations
             modelBuilder.Entity("HrmsH.Domain.Pharmacy.Product", b =>
                 {
                     b.Navigation("Batches");
+                });
+
+            modelBuilder.Entity("HrmsH.Domain.Staff.StaffMember", b =>
+                {
+                    b.Navigation("FacilityAssignments");
                 });
 #pragma warning restore 612, 618
         }

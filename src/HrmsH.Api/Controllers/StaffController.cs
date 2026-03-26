@@ -30,6 +30,7 @@ public sealed class StaffController : ControllerBase
         [FromQuery] bool sortDesc = false,
         [FromQuery] string? search = null,
         [FromQuery] StaffType? staffType = null,
+        [FromQuery] int? facilityId = null,
         [FromQuery] int? departmentId = null,
         [FromQuery] bool? isActive = null)
     {
@@ -43,6 +44,7 @@ public sealed class StaffController : ControllerBase
                 Search = search
             },
             staffType,
+            facilityId,
             departmentId,
             isActive));
 

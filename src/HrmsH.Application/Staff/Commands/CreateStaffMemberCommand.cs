@@ -10,5 +10,6 @@ public sealed record CreateStaffMemberCommand(
     string? Phone,
     string? Email,
     int? DepartmentId,
-    int? UserId) : IRequest<StaffMemberDto>;
+    int? UserId,
+    IReadOnlyList<int>? FacilityIds) : IRequest<StaffMemberDto>;
 

@@ -1,4 +1,5 @@
 using HrmsH.Application.Abstractions;
+using HrmsH.Application.Common.Interfaces;
 using HrmsH.Application.Common.Models;
 using HrmsH.Application.Staff.Dtos;
 using HrmsH.Domain.Staff;
@@ -10,10 +11,12 @@ namespace HrmsH.Application.Staff.Queries;
 public sealed class GetStaffMembersQueryHandler : IRequestHandler<GetStaffMembersQuery, PagedResult<StaffMemberDto>>
 {
     private readonly IHrmsDbContext _db;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetStaffMembersQueryHandler(IHrmsDbContext db)
+    public GetStaffMembersQueryHandler(IHrmsDbContext db, ICurrentUserService currentUser)
     {
         _db = db;
+        _currentUser = currentUser;
     }
 
     public async Task<PagedResult<StaffMemberDto>> Handle(GetStaffMembersQuery request, CancellationToken cancellationToken)
@@ -21,10 +24,22 @@ public sealed class GetStaffMembersQueryHandler : IRequestHandler<GetStaffMember
         var p = request.Pagination;
 
         IQueryable<StaffMember> query = _db.StaffMembers.AsNoTracking();
+        if (!_currentUser.IsSuperAdmin && _currentUser.HospitalId is int hospitalId)
+        {
+            query = query.Where(x => _db.StaffFacilityAssignments
+                .Any(a => a.StaffMemberId == x.Id &&
+                          _db.Facilities.Any(f => f.Id == a.FacilityId && f.HospitalId == hospitalId)));
+        }
 
         if (request.StaffType is StaffType type)
         {
             query = query.Where(x => x.StaffType == type);
+        }
+
+        if (request.FacilityId is int facilityId)
+        {
+            query = query.Where(x => _db.StaffFacilityAssignments
+                .Any(a => a.StaffMemberId == x.Id && a.FacilityId == facilityId));
         }
 
         if (request.DepartmentId is int depId)
@@ -53,10 +68,26 @@ public sealed class GetStaffMembersQueryHandler : IRequestHandler<GetStaffMember
 
         var total = await query.CountAsync(cancellationToken);
 
-        var items = await query
+        var staffItems = await query
             .Skip((p.PageNumber - 1) * p.PageSize)
             .Take(p.PageSize)
-            .Select(x => new StaffMemberDto
+            .ToListAsync(cancellationToken);
+
+        var staffIds = staffItems.Select(x => x.Id).ToList();
+        var assignmentRows = await _db.StaffFacilityAssignments
+            .AsNoTracking()
+            .Where(x => staffIds.Contains(x.StaffMemberId))
+            .OrderBy(x => x.Id)
+            .Select(x => new { x.StaffMemberId, x.FacilityId })
+            .ToListAsync(cancellationToken);
+
+        var facilityByStaff = assignmentRows
+            .GroupBy(x => x.StaffMemberId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<int>)g.Select(x => x.FacilityId).ToList());
+
+        return new PagedResult<StaffMemberDto>
+        {
+            Items = staffItems.Select(x => new StaffMemberDto
             {
                 Id = x.Id,
                 FullName = x.FullName,
@@ -65,13 +96,9 @@ public sealed class GetStaffMembersQueryHandler : IRequestHandler<GetStaffMember
                 Email = x.Email,
                 DepartmentId = x.DepartmentId,
                 UserId = x.UserId,
+                FacilityIds = facilityByStaff.TryGetValue(x.Id, out var list) ? list : Array.Empty<int>(),
                 IsActive = x.IsActive
-            })
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<StaffMemberDto>
-        {
-            Items = items,
+            }).ToList(),
             TotalCount = total
         };
     }

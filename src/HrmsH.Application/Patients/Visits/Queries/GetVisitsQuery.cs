@@ -4,6 +4,7 @@ using MediatR;
 namespace HrmsH.Application.Patients.Visits.Queries;
 
 public sealed record GetVisitsQuery(
+    int? FacilityId,
     int? PatientId,
     int? DoctorId,
     DateTime? From,
@@ -16,6 +17,7 @@ public sealed record GetVisitsQuery(
 public sealed class VisitListDto
 {
     public int Id { get; init; }
+    public int? FacilityId { get; init; }
     public int PatientId { get; init; }
     public int? DoctorId { get; init; }
     public bool HasPrescription { get; init; }

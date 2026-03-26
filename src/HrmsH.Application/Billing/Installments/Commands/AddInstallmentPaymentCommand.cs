@@ -4,6 +4,7 @@ using MediatR;
 namespace HrmsH.Application.Billing.Installments.Commands;
 
 public sealed record AddInstallmentPaymentCommand(
+    int? FacilityId,
     int InstallmentItemId,
     decimal Amount,
     string? Method,

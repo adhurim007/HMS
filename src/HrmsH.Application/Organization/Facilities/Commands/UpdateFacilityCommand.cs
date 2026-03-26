@@ -7,5 +7,6 @@ public sealed record UpdateFacilityCommand(
     int Id,
     string Name,
     string? Code,
-    string? Address) : IRequest<FacilityDto>;
+    string? Address,
+    int? ParentId) : IRequest<FacilityDto>;
 

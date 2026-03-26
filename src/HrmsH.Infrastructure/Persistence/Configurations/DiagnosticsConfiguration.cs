@@ -15,3 +15,4 @@ public sealed class DiagnosticTestConfiguration : IEntityTypeConfiguration<Diagn
         builder.HasIndex(x => x.Code).IsUnique();
     }
 }
+

@@ -4,6 +4,7 @@ namespace HrmsH.Domain.Appointments;
 
 public class Appointment : BaseEntity
 {
+    public int? FacilityId { get; set; }
     public int PatientId { get; set; }
     public int? DoctorId { get; set; } // StaffMemberId
     public int? DepartmentId { get; set; }

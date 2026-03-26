@@ -8,6 +8,7 @@ export type AppointmentStatus =
 
 export interface AppointmentDto {
   id: number;
+  facilityId?: number | null;
   patientId: number;
   doctorId?: number | null;
   departmentId?: number | null;

@@ -394,6 +394,7 @@ public sealed class PrescriptionsController : ControllerBase
             return BadRequest(ApiResponse<object>.Fail("No invoice lines to create."));
 
         var invoice = await _mediator.Send(new CreateInvoiceCommand(
+            FacilityId: null,
             PatientId: prescription.PatientId,
             InvoiceDate: DateTime.UtcNow,
             Items: lines));

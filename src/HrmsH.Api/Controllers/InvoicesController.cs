@@ -20,6 +20,7 @@ public sealed class InvoicesController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<PagedApiResponse<InvoiceListDto>>> GetList(
+        [FromQuery] int? facilityId = null,
         [FromQuery] int? patientId = null,
         [FromQuery] InvoiceStatus? status = null,
         [FromQuery] DateTime? from = null,
@@ -29,7 +30,7 @@ public sealed class InvoicesController : ControllerBase
         [FromQuery] string? sortBy = null,
         [FromQuery] bool sortDescending = true)
     {
-        var result = await _mediator.Send(new GetInvoicesQuery(patientId, status, from, to, page, pageSize, sortBy, sortDescending));
+        var result = await _mediator.Send(new GetInvoicesQuery(facilityId, patientId, status, from, to, page, pageSize, sortBy, sortDescending));
         return Ok(new PagedApiResponse<InvoiceListDto>
         {
             Success = true,

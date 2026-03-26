@@ -1,4 +1,5 @@
 using HrmsH.Api.Models;
+using HrmsH.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,10 +14,12 @@ namespace HrmsH.Api.Controllers;
 public sealed class UsersController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ICurrentUserService _currentUser;
 
-    public UsersController(UserManager<ApplicationUser> userManager)
+    public UsersController(UserManager<ApplicationUser> userManager, ICurrentUserService currentUser)
     {
         _userManager = userManager;
+        _currentUser = currentUser;
     }
 
     [HttpGet]
@@ -26,6 +29,10 @@ public sealed class UsersController : ControllerBase
         [FromQuery] string? search = null)
     {
         var query = _userManager.Users.AsQueryable();
+        if (!_currentUser.IsSuperAdmin && _currentUser.HospitalId is int hospitalId)
+        {
+            query = query.Where(u => u.HospitalId == hospitalId);
+        }
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim().ToLower();

@@ -11,6 +11,8 @@ import { DoctorsService } from '../doctors/doctors.service';
 import { DoctorCalendarSlotDto, DoctorDto, DoctorMeDto } from '../doctors/doctors.api';
 import { DepartmentsService } from '../admin/departments/departments.service';
 import { DepartmentDto } from '../admin/departments/departments.api';
+import { FacilitiesService } from '../admin/facilities/facilities.service';
+import { FacilityDto } from '../admin/facilities/facilities.api';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -36,6 +38,7 @@ export class AppointmentsPage implements OnInit {
   patientFilter: number | null = null;
   doctorFilter: number | null = null;
   departmentFilter: number | null = null;
+  facilityFilter: number | null = null;
 
   patients: PatientDto[] = [];
   // Patient picker (search + optional create)
@@ -59,6 +62,10 @@ export class AppointmentsPage implements OnInit {
   ];
   doctors: DoctorDto[] = [];
   departments: DepartmentDto[] = [];
+  facilities: FacilityDto[] = [];
+  filteredDepartments: DepartmentDto[] = [];
+  facilityFormInput = '';
+  facilityFilterInput = '';
 
   /** Set when user is Doctor (not SuperAdmin): used to fix form to self + own department. */
   currentDoctor: DoctorMeDto | null = null;
@@ -82,6 +89,7 @@ export class AppointmentsPage implements OnInit {
   readonly form = this.fb.group({
     patientId: [null as number | null, [Validators.required]],
     doctorId: [null as number | null],
+    facilityId: [null as number | null],
     departmentId: [null as number | null],
     scheduledStart: ['', Validators.required],
     scheduledEnd: [''],
@@ -115,6 +123,7 @@ export class AppointmentsPage implements OnInit {
     private readonly patientsService: PatientsService,
     private readonly doctorsService: DoctorsService,
     private readonly departmentsService: DepartmentsService,
+    private readonly facilitiesService: FacilitiesService,
     private readonly auth: AuthService,
     private readonly router: Router,
     private readonly fb: FormBuilder,
@@ -126,6 +135,20 @@ export class AppointmentsPage implements OnInit {
   }
 
   loadLookups(): void {
+    this.facilitiesService
+      .getFacilities({
+        pageNumber: 1,
+        pageSize: 500,
+        sortBy: 'name',
+        sortDesc: false,
+        search: null,
+      })
+      .subscribe({
+        next: (res) => {
+          this.facilities = res.items;
+        },
+      });
+
     if (this.isDoctorView) {
       this.doctorsService.getMe().subscribe({
         next: (me) => {
@@ -178,6 +201,7 @@ export class AppointmentsPage implements OnInit {
               Items?: DepartmentDto[];
             };
             this.departments = anyRes.items ?? anyRes.Items ?? [];
+            this.syncFacilityAndDepartment();
           },
         });
     }
@@ -341,6 +365,7 @@ export class AppointmentsPage implements OnInit {
         sortBy: this.sortBy,
         sortDesc: this.sortDesc,
         search: this.search || null,
+        facilityId: this.facilityFilter,
         patientId: this.patientFilter,
         doctorId: this.doctorFilter,
         departmentId: this.departmentFilter,
@@ -386,6 +411,7 @@ export class AppointmentsPage implements OnInit {
     this.patientFilter = null;
     this.doctorFilter = null;
     this.departmentFilter = null;
+    this.facilityFilter = null;
     this.pageNumber = 1;
     this.load();
   }
@@ -419,14 +445,19 @@ export class AppointmentsPage implements OnInit {
     this.editingId = null;
     const doctorId = this.isDoctorView && this.currentDoctor ? this.currentDoctor.staffMemberId : null;
     const departmentId = this.isDoctorView && this.currentDoctor ? this.currentDoctor.departmentId ?? null : null;
+    const facilityId = departmentId != null ? (this.departments.find((x) => x.id === departmentId)?.facilityId ?? null) : null;
     this.form.reset({
       patientId: null,
       doctorId,
+      facilityId,
       departmentId,
       scheduledStart: '',
       scheduledEnd: '',
       reason: '',
     });
+    const selectedFacility = this.facilities.find((f) => f.id === facilityId);
+    this.facilityFormInput = selectedFacility ? this.getFacilityOptionLabel(selectedFacility) : '';
+    this.onFacilityChange();
     this.resetPatientPicker();
     this.showForm = true;
   }
@@ -435,14 +466,19 @@ export class AppointmentsPage implements OnInit {
     this.editingId = a.id;
     const doctorId = this.isDoctorView && this.currentDoctor ? this.currentDoctor.staffMemberId : (a.doctorId ?? null);
     const departmentId = this.isDoctorView && this.currentDoctor ? (this.currentDoctor.departmentId ?? null) : (a.departmentId ?? null);
+    const facilityId = departmentId != null ? (this.departments.find((x) => x.id === departmentId)?.facilityId ?? null) : null;
     this.form.reset({
       patientId: a.patientId,
       doctorId,
+      facilityId,
       departmentId,
       scheduledStart: a.scheduledStart.substring(0, 16),
       scheduledEnd: a.scheduledEnd ? a.scheduledEnd.substring(0, 16) : '',
       reason: a.reason ?? '',
     });
+    const selectedFacility = this.facilities.find((f) => f.id === facilityId);
+    this.facilityFormInput = selectedFacility ? this.getFacilityOptionLabel(selectedFacility) : '';
+    this.onFacilityChange();
 
     // Show selected patient in picker input (no search).
     const p = this.patients.find((x) => x.id === a.patientId);
@@ -465,6 +501,7 @@ export class AppointmentsPage implements OnInit {
 
     const v = this.form.value;
     const payload = {
+      facilityId: v.facilityId ? Number(v.facilityId) : null,
       patientId: Number(v.patientId),
       doctorId: v.doctorId ? Number(v.doctorId) : null,
       departmentId: v.departmentId ? Number(v.departmentId) : null,
@@ -483,6 +520,7 @@ export class AppointmentsPage implements OnInit {
     } else {
       this.appointmentsService
         .updateAppointment(this.editingId, {
+          facilityId: payload.facilityId,
           doctorId: payload.doctorId,
           departmentId: payload.departmentId,
           scheduledStart: payload.scheduledStart,
@@ -682,6 +720,7 @@ export class AppointmentsPage implements OnInit {
         sortBy: 'date',
         sortDesc: false,
         search: null,
+        facilityId: this.facilityFilter,
         patientId: this.patientFilter,
         doctorId: this.calendarDoctorId,
         departmentId: this.departmentFilter,
@@ -734,6 +773,7 @@ export class AppointmentsPage implements OnInit {
         this.form.reset({
           patientId: null,
           doctorId,
+          facilityId: departmentId != null ? (this.departments.find((x) => x.id === departmentId)?.facilityId ?? null) : null,
           departmentId,
           scheduledStart: this.toLocalDateTimeInput(startDate),
           scheduledEnd: this.toLocalDateTimeInput(endDate),
@@ -751,6 +791,7 @@ export class AppointmentsPage implements OnInit {
     this.form.reset({
       patientId: null,
       doctorId,
+      facilityId: departmentId != null ? (this.departments.find((x) => x.id === departmentId)?.facilityId ?? null) : null,
       departmentId,
       scheduledStart: this.toLocalDateTimeInput(startDate),
       scheduledEnd: this.toLocalDateTimeInput(endDate),
@@ -803,6 +844,54 @@ export class AppointmentsPage implements OnInit {
   private toLocalDateTimeInput(d: Date): string {
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  onFacilityChange(): void {
+    const facilityId = this.form.value.facilityId ?? null;
+    this.filteredDepartments = this.departments.filter((x) => x.facilityId === facilityId);
+    const currentDepartmentId = this.form.value.departmentId ?? null;
+    if (currentDepartmentId != null && !this.filteredDepartments.some((x) => x.id === currentDepartmentId)) {
+      this.form.patchValue({ departmentId: null });
+    }
+  }
+
+  onFacilityFormInputChanged(rawValue: string): void {
+    const text = (rawValue ?? '').trim();
+    if (!text) {
+      this.form.patchValue({ facilityId: null });
+      this.onFacilityChange();
+      return;
+    }
+    const selected = this.facilities.find((f) => this.getFacilityOptionLabel(f).toLowerCase() === text.toLowerCase());
+    this.form.patchValue({ facilityId: selected?.id ?? null });
+    this.onFacilityChange();
+  }
+
+  onFacilityFilterInputChanged(rawValue: string): void {
+    const text = (rawValue ?? '').trim();
+    if (!text) {
+      this.facilityFilter = null;
+      this.applyFilters();
+      return;
+    }
+    const selected = this.facilities.find((f) => this.getFacilityOptionLabel(f).toLowerCase() === text.toLowerCase());
+    this.facilityFilter = selected?.id ?? null;
+    this.applyFilters();
+  }
+
+  getFacilityOptionLabel(facility: FacilityDto): string {
+    return facility.code ? `${facility.name} (${facility.code})` : facility.name;
+  }
+
+  private syncFacilityAndDepartment(): void {
+    const departmentId = this.form.value.departmentId ?? null;
+    if (departmentId != null) {
+      const dep = this.departments.find((x) => x.id === departmentId);
+      if (dep) {
+        this.form.patchValue({ facilityId: dep.facilityId }, { emitEvent: false });
+      }
+    }
+    this.onFacilityChange();
   }
 }
 

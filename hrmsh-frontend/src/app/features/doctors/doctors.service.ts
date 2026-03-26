@@ -65,6 +65,7 @@ export class DoctorsService {
     password: string;
     fullName: string;
     phone?: string | null;
+    facilityId?: number | null;
     departmentId?: number | null;
     specialty?: string | null;
     licenseNumber?: string | null;
@@ -75,6 +76,7 @@ export class DoctorsService {
         password: payload.password,
         fullName: payload.fullName,
         phone: payload.phone ?? null,
+        facilityId: payload.facilityId ?? null,
         departmentId: payload.departmentId ?? null,
         specialty: payload.specialty ?? null,
         licenseNumber: payload.licenseNumber ?? null,
@@ -87,6 +89,7 @@ export class DoctorsService {
     fullName: string;
     phone?: string | null;
     email?: string | null;
+    facilityId?: number | null;
     departmentId?: number | null;
     specialty?: string | null;
     licenseNumber?: string | null;
@@ -98,6 +101,7 @@ export class DoctorsService {
       email: payload.email ?? null,
       departmentId: payload.departmentId ?? null,
       userId: null as number | null,
+      facilityIds: payload.facilityId != null ? [payload.facilityId] : [],
     };
     return this.api
       .post<{ success: boolean; data: { id: number } }>('Staff', staffPayload)
@@ -123,6 +127,7 @@ export class DoctorsService {
       fullName: string;
       phone?: string | null;
       email?: string | null;
+      facilityId?: number | null;
       departmentId?: number | null;
       isActive: boolean;
       specialty?: string | null;
@@ -138,6 +143,7 @@ export class DoctorsService {
       departmentId: payload.departmentId ?? null,
       userId: null as number | null,
       isActive: payload.isActive,
+      facilityIds: payload.facilityId != null ? [payload.facilityId] : [],
     };
     return this.api
       .put<{ success: boolean; data: DoctorDto }>(`Staff/${staffMemberId}`, staffPayload)

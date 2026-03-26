@@ -11,6 +11,7 @@ public sealed class StaffMemberDto
     public string? Email { get; init; }
     public int? UserId { get; init; }
     public int? DepartmentId { get; init; }
+    public IReadOnlyList<int> FacilityIds { get; init; } = Array.Empty<int>();
     public bool IsActive { get; init; }
 }
 

@@ -1,5 +1,6 @@
 using HrmsH.Application.Abstractions;
 using HrmsH.Application.Common.Models;
+using HrmsH.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,12 +9,20 @@ namespace HrmsH.Application.Billing.Invoices.Queries;
 public sealed class GetInvoicesQueryHandler : IRequestHandler<GetInvoicesQuery, PagedResult<InvoiceListDto>>
 {
     private readonly IHrmsDbContext _db;
+    private readonly IFacilityContextService _facilityContext;
 
-    public GetInvoicesQueryHandler(IHrmsDbContext db) => _db = db;
+    public GetInvoicesQueryHandler(IHrmsDbContext db, IFacilityContextService facilityContext)
+    {
+        _db = db;
+        _facilityContext = facilityContext;
+    }
 
     public async Task<PagedResult<InvoiceListDto>> Handle(GetInvoicesQuery request, CancellationToken cancellationToken)
     {
         var query = _db.Invoices.AsNoTracking();
+        var effectiveFacilityId = request.FacilityId ?? _facilityContext.ActiveFacilityId;
+        if (effectiveFacilityId.HasValue)
+            query = query.Where(x => x.FacilityId == effectiveFacilityId.Value);
 
         if (request.PatientId.HasValue)
             query = query.Where(x => x.PatientId == request.PatientId.Value);
@@ -39,6 +48,7 @@ public sealed class GetInvoicesQueryHandler : IRequestHandler<GetInvoicesQuery, 
             {
                 Id = x.Id,
                 InvoiceNumber = x.InvoiceNumber,
+                FacilityId = x.FacilityId,
                 PatientId = x.PatientId,
                 InvoiceDate = x.InvoiceDate,
                 TotalAmount = x.TotalAmount,

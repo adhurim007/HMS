@@ -5,6 +5,7 @@ namespace HrmsH.Application.Appointments.Dtos;
 public sealed class AppointmentDto
 {
     public int Id { get; init; }
+    public int? FacilityId { get; init; }
     public int PatientId { get; init; }
     public int? DoctorId { get; init; }
     public int? DepartmentId { get; init; }

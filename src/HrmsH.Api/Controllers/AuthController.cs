@@ -1,5 +1,7 @@
 using HrmsH.Api.Auth;
 using HrmsH.Api.Models;
+using HrmsH.Application.Common.Interfaces;
+using HrmsH.Domain.Identity;
 using HrmsH.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,23 +17,26 @@ public sealed class AuthController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly JwtTokenService _tokenService;
     private readonly RoleManager<ApplicationRole> _roleManager;
+    private readonly ICurrentUserService _currentUser;
 
     public AuthController(
         SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager,
         JwtTokenService tokenService,
-        RoleManager<ApplicationRole> roleManager)
+        RoleManager<ApplicationRole> roleManager,
+        ICurrentUserService currentUser)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _tokenService = tokenService;
         _roleManager = roleManager;
+        _currentUser = currentUser;
     }
 
     public sealed record LoginRequest(string Email, string Password);
     public sealed record LoginResponse(string Token);
     public sealed record RegisterRequest(string Email, string Password);
-    public sealed record CreateUserRequest(string Email, string Password, string Role);
+    public sealed record CreateUserRequest(string Email, string Password, string Role, int? HospitalId);
     public sealed record CreateUserResponse(int Id, string Email);
 
     [HttpPost("login")]
@@ -86,11 +91,30 @@ public sealed class AuthController : ControllerBase
             return BadRequest(ApiResponse<CreateUserResponse>.Fail("Role does not exist."));
         }
 
+        if (!_currentUser.IsSuperAdmin &&
+            (string.Equals(request.Role, SystemRoles.SuperAdmin, StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(request.Role, SystemRoles.HospitalAdmin, StringComparison.OrdinalIgnoreCase)))
+        {
+            return BadRequest(ApiResponse<CreateUserResponse>.Fail("Only super admin can create admin roles."));
+        }
+
         var user = new ApplicationUser
         {
             UserName = request.Email,
-            Email = request.Email
+            Email = request.Email,
+            HospitalId = _currentUser.IsSuperAdmin ? request.HospitalId : _currentUser.HospitalId
         };
+
+        if (!_currentUser.IsSuperAdmin && user.HospitalId is null)
+        {
+            return BadRequest(ApiResponse<CreateUserResponse>.Fail("Hospital scope is required."));
+        }
+        if (_currentUser.IsSuperAdmin &&
+            !string.Equals(request.Role, SystemRoles.SuperAdmin, StringComparison.OrdinalIgnoreCase) &&
+            user.HospitalId is null)
+        {
+            return BadRequest(ApiResponse<CreateUserResponse>.Fail("HospitalId is required for non-super-admin users."));
+        }
 
         var createResult = await _userManager.CreateAsync(user, request.Password);
         if (!createResult.Succeeded)

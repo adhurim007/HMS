@@ -22,5 +22,20 @@ public sealed class CurrentUserService : ICurrentUserService
     }
 
     public string? UserName => _httpContextAccessor.HttpContext?.User?.Identity?.Name;
+
+    public int? HospitalId
+    {
+        get
+        {
+            var val = _httpContextAccessor.HttpContext?.User?.FindFirstValue("hospital_id");
+            return int.TryParse(val, out var id) ? id : null;
+        }
+    }
+
+    public bool IsSuperAdmin =>
+        _httpContextAccessor.HttpContext?.User?.IsInRole("SuperAdmin") == true;
+
+    public bool IsHospitalAdmin =>
+        _httpContextAccessor.HttpContext?.User?.IsInRole("HospitalAdmin") == true;
 }
 

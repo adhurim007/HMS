@@ -7,6 +7,7 @@ namespace HrmsH.Application.Appointments.Queries;
 
 public sealed record GetAppointmentsQuery(
     PaginationParams Pagination,
+    int? FacilityId,
     int? PatientId,
     int? DoctorId,
     int? DepartmentId,

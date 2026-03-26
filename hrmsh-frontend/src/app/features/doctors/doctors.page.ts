@@ -7,6 +7,8 @@ import { DoctorsService } from './doctors.service';
 import { DoctorDto } from './doctors.api';
 import { DepartmentsService } from '../admin/departments/departments.service';
 import { DepartmentDto } from '../admin/departments/departments.api';
+import { FacilitiesService } from '../admin/facilities/facilities.service';
+import { FacilityDto } from '../admin/facilities/facilities.api';
 
 @Component({
   selector: 'app-doctors-page',
@@ -26,9 +28,15 @@ export class DoctorsPage implements OnInit {
   loading = false;
 
   departmentFilter: number | null = null;
+  facilityFilter: number | null = null;
   isActiveFilter: boolean | null = null;
 
   departments: DepartmentDto[] = [];
+  facilities: FacilityDto[] = [];
+  filteredDepartments: DepartmentDto[] = [];
+  departmentFilterOptions: DepartmentDto[] = [];
+  facilityFormInput = '';
+  facilityFilterInput = '';
 
   editingId: number | null = null;
   showForm = false;
@@ -40,6 +48,7 @@ export class DoctorsPage implements OnInit {
     phone: [''],
     email: [''],
     password: [''],
+    facilityId: [null as number | null],
     departmentId: [null as number | null],
     specialty: [''],
     licenseNumber: [''],
@@ -75,6 +84,7 @@ export class DoctorsPage implements OnInit {
   constructor(
     private readonly doctorsService: DoctorsService,
     private readonly departmentsService: DepartmentsService,
+    private readonly facilitiesService: FacilitiesService,
     private readonly fb: FormBuilder,
   ) {}
 
@@ -84,6 +94,20 @@ export class DoctorsPage implements OnInit {
   }
 
   loadLookups(): void {
+    this.facilitiesService
+      .getFacilities({
+        pageNumber: 1,
+        pageSize: 500,
+        sortBy: 'name',
+        sortDesc: false,
+        search: null,
+      })
+      .subscribe({
+        next: (res) => {
+          this.facilities = res.items;
+        },
+      });
+
     this.departmentsService
       .getDepartments({
         pageNumber: 1,
@@ -96,6 +120,8 @@ export class DoctorsPage implements OnInit {
       .subscribe({
         next: (res) => {
           this.departments = res.items;
+          this.syncFacilityAndDepartment();
+          this.onFacilityFilterChange();
         },
       });
   }
@@ -135,6 +161,7 @@ export class DoctorsPage implements OnInit {
   }
 
   clearFilters(): void {
+    this.facilityFilter = null;
     this.departmentFilter = null;
     this.isActiveFilter = null;
     this.search = '';
@@ -175,6 +202,7 @@ export class DoctorsPage implements OnInit {
       phone: '',
       email: '',
       password: '',
+      facilityId: null,
       departmentId: null,
       specialty: '',
       licenseNumber: '',
@@ -203,8 +231,10 @@ export class DoctorsPage implements OnInit {
       sunStart: '09:00',
       sunEnd: '17:00',
     });
+    this.facilityFormInput = '';
     this.form.get('email')?.setValidators([Validators.required, Validators.email]);
     this.form.get('password')?.setValidators([Validators.required]);
+    this.onFacilityChange();
     this.showForm = true;
   }
 
@@ -216,6 +246,7 @@ export class DoctorsPage implements OnInit {
       phone: d.phone ?? '',
       email: d.email ?? '',
       password: '',
+      facilityId: this.departments.find((x) => x.id === (d.departmentId ?? -1))?.facilityId ?? null,
       departmentId: d.departmentId ?? null,
       specialty: d.specialty ?? '',
       licenseNumber: d.licenseNumber ?? '',
@@ -244,8 +275,11 @@ export class DoctorsPage implements OnInit {
       sunStart: '09:00',
       sunEnd: '17:00',
     });
+    const selectedFacility = this.facilities.find((f) => f.id === (this.form.value.facilityId ?? null));
+    this.facilityFormInput = selectedFacility ? this.getFacilityOptionLabel(selectedFacility) : '';
     this.form.get('email')?.clearValidators();
     this.form.get('password')?.clearValidators();
+    this.onFacilityChange();
     this.showForm = true;
 
     this.doctorsService.getVisitSettings(d.staffMemberId).subscribe({
@@ -316,6 +350,7 @@ export class DoctorsPage implements OnInit {
           password,
           fullName: v.fullName!,
           phone: v.phone || null,
+          facilityId: v.facilityId ?? null,
           departmentId: v.departmentId ?? null,
           specialty: v.specialty || null,
           licenseNumber: v.licenseNumber || null,
@@ -379,6 +414,7 @@ export class DoctorsPage implements OnInit {
           fullName: v.fullName!,
           phone: v.phone || null,
           email: v.email || null,
+          facilityId: v.facilityId ?? null,
           departmentId: v.departmentId ?? null,
           isActive: !!v.isActive,
           specialty: v.specialty || null,
@@ -434,6 +470,68 @@ export class DoctorsPage implements OnInit {
           },
         });
     }
+  }
+
+  onFacilityChange(): void {
+    const facilityId = this.form.value.facilityId ?? null;
+    this.filteredDepartments = this.departments.filter((x) => x.facilityId === facilityId);
+    const currentDepartmentId = this.form.value.departmentId ?? null;
+    if (currentDepartmentId != null && !this.filteredDepartments.some((x) => x.id === currentDepartmentId)) {
+      this.form.patchValue({ departmentId: null });
+    }
+  }
+
+  onFacilityFilterChange(): void {
+    this.departmentFilterOptions = this.departments.filter(
+      (x) => this.facilityFilter == null || x.facilityId === this.facilityFilter,
+    );
+    if (
+      this.departmentFilter != null &&
+      !this.departmentFilterOptions.some((x) => x.id === this.departmentFilter)
+    ) {
+      this.departmentFilter = null;
+    }
+  }
+
+  onFacilityFormInputChanged(rawValue: string): void {
+    const text = (rawValue ?? '').trim();
+    if (!text) {
+      this.form.patchValue({ facilityId: null });
+      this.onFacilityChange();
+      return;
+    }
+    const selected = this.facilities.find((f) => this.getFacilityOptionLabel(f).toLowerCase() === text.toLowerCase());
+    this.form.patchValue({ facilityId: selected?.id ?? null });
+    this.onFacilityChange();
+  }
+
+  onFacilityFilterInputChanged(rawValue: string): void {
+    const text = (rawValue ?? '').trim();
+    if (!text) {
+      this.facilityFilter = null;
+      this.onFacilityFilterChange();
+      this.applyFilters();
+      return;
+    }
+    const selected = this.facilities.find((f) => this.getFacilityOptionLabel(f).toLowerCase() === text.toLowerCase());
+    this.facilityFilter = selected?.id ?? null;
+    this.onFacilityFilterChange();
+    this.applyFilters();
+  }
+
+  getFacilityOptionLabel(facility: FacilityDto): string {
+    return facility.code ? `${facility.name} (${facility.code})` : facility.name;
+  }
+
+  private syncFacilityAndDepartment(): void {
+    const departmentId = this.form.value.departmentId ?? null;
+    if (departmentId != null) {
+      const dep = this.departments.find((x) => x.id === departmentId);
+      if (dep) {
+        this.form.patchValue({ facilityId: dep.facilityId }, { emitEvent: false });
+      }
+    }
+    this.onFacilityChange();
   }
 
   toggleActive(d: DoctorDto): void {

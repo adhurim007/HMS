@@ -5,6 +5,7 @@ namespace HrmsH.Application.Patients.Visits.Commands;
 
 public sealed record UpdateVisitCommand(
     int Id,
+    int? FacilityId,
     int? DoctorId,
     DateTime? VisitDate,
     string? ChiefComplaint,

@@ -1,0 +1,191 @@
+<div class="row">
+  <div class="col-12">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+      <h4 class="mb-sm-0">Hospitals</h4>
+      <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+          <li class="breadcrumb-item">
+            <a routerLink="/dashboard" class="text-reset">Dashboard</a>
+          </li>
+          <li class="breadcrumb-item active">Hospitals</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-header border-0">
+        <div class="d-flex align-items-center">
+          <h5 class="card-title mb-0 flex-grow-1">Hospitals</h5>
+          <div class="flex-shrink-0 d-flex gap-2">
+            <div class="search-box">
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search name or code..."
+                [value]="search"
+                (input)="onSearchChange($any($event.target).value)"
+              />
+              <i class="ri-search-line search-icon"></i>
+            </div>
+            <button class="btn btn-primary" type="button" (click)="openCreate()">
+              <i class="ri-add-line align-bottom me-1"></i> Add Hospital
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="text-muted">
+            Showing
+            <strong>{{ (pageNumber - 1) * pageSize + 1 }}</strong>
+            -
+            <strong>{{ math.min(pageNumber * pageSize, totalCount) }}</strong>
+            of <strong>{{ totalCount }}</strong> hospitals
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="text-muted">Page size</span>
+            <select
+              class="form-select form-select-sm w-auto"
+              [value]="pageSize"
+              (change)="changePageSize(+$any($event.target).value)"
+            >
+              <option [value]="10">10</option>
+              <option [value]="20">20</option>
+              <option [value]="50">50</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table align-middle table-nowrap table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th (click)="sort('name')" class="cursor-pointer">
+                  Name
+                  <i class="ri-arrow-up-down-line align-bottom ms-1"></i>
+                </th>
+                <th (click)="sort('code')" class="cursor-pointer">
+                  Code
+                  <i class="ri-arrow-up-down-line align-bottom ms-1"></i>
+                </th>
+                <th>Address</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="!loading && hospitals.length === 0">
+                <td colspan="4" class="text-center text-muted py-4">
+                  No hospitals found.
+                </td>
+              </tr>
+              <tr *ngIf="loading">
+                <td colspan="4" class="text-center py-4">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngFor="let h of hospitals">
+                <td>{{ h.name }}</td>
+                <td>{{ h.code }}</td>
+                <td>{{ h.address }}</td>
+                <td class="text-end">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-soft-secondary me-1"
+                    (click)="openEdit(h)"
+                  >
+                    <i class="ri-edit-2-line"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-soft-danger"
+                    (click)="delete(h)"
+                  >
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          class="d-flex justify-content-between align-items-center mt-3"
+          *ngIf="totalCount > 0"
+        >
+          <button
+            type="button"
+            class="btn btn-soft-secondary btn-sm"
+            (click)="changePage(-1)"
+          >
+            Previous
+          </button>
+          <div class="text-muted">
+            Page {{ pageNumber }} of
+            {{ math.max(1, math.ceil(totalCount / pageSize)) }}
+          </div>
+          <button
+            type="button"
+            class="btn btn-soft-secondary btn-sm"
+            (click)="changePage(1)"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  class="offcanvas offcanvas-end"
+  tabindex="-1"
+  [class.show]="showForm"
+  [style.visibility]="showForm ? 'visible' : 'hidden'"
+>
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">
+      {{ editingId == null ? 'Add Hospital' : 'Edit Hospital' }}
+    </h5>
+    <button
+      type="button"
+      class="btn-close text-reset"
+      (click)="cancelForm()"
+    ></button>
+  </div>
+  <div class="offcanvas-body">
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-control" formControlName="name" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Code</label>
+        <input type="text" class="form-control" formControlName="code" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Address</label>
+        <textarea
+          rows="2"
+          class="form-control"
+          formControlName="address"
+        ></textarea>
+      </div>
+      <div class="d-flex justify-content-end gap-2">
+        <button
+          type="button"
+          class="btn btn-soft-secondary"
+          (click)="cancelForm()"
+        >
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>

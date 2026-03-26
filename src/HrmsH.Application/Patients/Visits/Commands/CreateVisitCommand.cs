@@ -4,6 +4,7 @@ using MediatR;
 namespace HrmsH.Application.Patients.Visits.Commands;
 
 public sealed record CreateVisitCommand(
+    int? FacilityId,
     int PatientId,
     int? DoctorId,
     DateTime? VisitDate,

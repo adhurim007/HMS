@@ -30,6 +30,7 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddScoped<HrmsH.Application.Common.Interfaces.ICurrentUserService, HrmsH.Api.Services.CurrentUserService>();
+builder.Services.AddScoped<HrmsH.Application.Common.Interfaces.IFacilityContextService, HrmsH.Api.Services.FacilityContextService>();
 
 builder.Services
     .AddIdentity<HrmsH.Infrastructure.Persistence.ApplicationUser, HrmsH.Infrastructure.Persistence.ApplicationRole>(options =>

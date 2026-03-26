@@ -181,6 +181,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'admin/hospitals',
+        loadComponent: () =>
+          import('./features/admin/hospitals/hospitals.page').then(
+            (m) => m.HospitalsPage,
+          ),
+      },
+      {
         path: 'admin/departments',
         loadComponent: () =>
           import('./features/admin/departments/departments.page').then(
@@ -199,6 +206,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/users/users.page').then(
             (m) => m.UsersPage,
+          ),
+      },
+      {
+        path: 'admin/staff',
+        loadComponent: () =>
+          import('./features/admin/staff/staff.page').then(
+            (m) => m.StaffPage,
           ),
       },
       {

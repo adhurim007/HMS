@@ -35,9 +35,11 @@ public class HrmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole,
         _clock = clock;
     }
 
+    public DbSet<Hospital> Hospitals => Set<Hospital>();
     public DbSet<Facility> Facilities => Set<Facility>();
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<StaffMember> StaffMembers => Set<StaffMember>();
+    public DbSet<StaffFacilityAssignment> StaffFacilityAssignments => Set<StaffFacilityAssignment>();
     public DbSet<DoctorProfile> DoctorProfiles => Set<DoctorProfile>();
     public DbSet<Patient> Patients => Set<Patient>();
     public DbSet<Visit> Visits => Set<Visit>();

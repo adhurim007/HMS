@@ -7,6 +7,7 @@ public class PharmacyPurchaseInvoice : BaseEntity
 {
     // Stored as a header-level reference similar to patient invoices.
     public string InvoiceNumber { get; set; } = default!;
+    public int? FacilityId { get; set; }
     public DateTime InvoiceDate { get; set; } = DateTime.UtcNow;
 
     public string? SupplierName { get; set; }

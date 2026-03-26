@@ -36,6 +36,10 @@ public sealed class JwtTokenService
 
         var roles = await _userManager.GetRolesAsync(user);
         claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
+        if (user.HospitalId is int hospitalId)
+        {
+            claims.Add(new Claim("hospital_id", hospitalId.ToString()));
+        }
 
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var creds = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { NgIf, NgForOf, NgClass } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../core/services/auth.service';
 import { I18nService } from '../core/i18n/i18n.service';
 import { TranslatePipe } from '../core/i18n/translate.pipe';
@@ -8,6 +9,9 @@ import { MenusService } from '../features/admin/menus/menus.service';
 import { MenuDto } from '../features/admin/menus/menus.api';
 import { NotificationsService } from '../features/notifications/notifications.service';
 import { NotificationDto } from '../features/notifications/notifications.api';
+import { FacilitiesService } from '../features/admin/facilities/facilities.service';
+import { FacilityDto } from '../features/admin/facilities/facilities.api';
+import { FacilityContextService } from '../core/services/facility-context.service';
 
 interface NavItem {
   id: number;
@@ -29,6 +33,7 @@ interface NavItem {
     NgIf,
     NgForOf,
     NgClass,
+    FormsModule,
     TranslatePipe,
   ],
   templateUrl: './main-layout.component.html',
@@ -49,12 +54,17 @@ export class MainLayoutComponent implements OnInit {
   unreadCount = 0;
   notificationsLoading = false;
   notificationsOpen = false;
+  facilities: FacilityDto[] = [];
+  facilityInput = '';
+  selectedFacilityId: number | null = null;
 
   constructor(
     private readonly auth: AuthService,
     public readonly i18n: I18nService,
     private readonly menusService: MenusService,
     private readonly notificationsService: NotificationsService,
+    private readonly facilitiesService: FacilitiesService,
+    private readonly facilityContext: FacilityContextService,
   ) {}
 
   ngOnInit(): void {
@@ -63,7 +73,9 @@ export class MainLayoutComponent implements OnInit {
     document.documentElement.setAttribute('data-layout-width', 'fluid');
     document.documentElement.setAttribute('data-sidebar-size', 'lg');
     this.userEmail = this.auth.getEmail();
+    this.selectedFacilityId = this.facilityContext.getActiveFacilityId();
     if (this.isAuthenticated()) {
+      this.loadFacilities();
       this.loadNavigationMenus();
       this.refreshUnreadCount();
     }
@@ -124,6 +136,26 @@ export class MainLayoutComponent implements OnInit {
     return this.auth.isAuthenticated();
   }
 
+  onFacilityChanged(rawValue: string): void {
+    const text = (rawValue ?? '').trim();
+    if (!text) {
+      this.facilityInput = '';
+      this.selectedFacilityId = null;
+      this.facilityContext.setActiveFacilityId(null);
+      return;
+    }
+
+    const selected = this.facilities.find((f) => this.getFacilityOptionLabel(f).toLowerCase() === text.toLowerCase());
+    const facilityId = selected?.id ?? null;
+    this.facilityInput = selected ? this.getFacilityOptionLabel(selected) : text;
+    this.selectedFacilityId = facilityId;
+    this.facilityContext.setActiveFacilityId(facilityId);
+  }
+
+  getFacilityOptionLabel(facility: FacilityDto): string {
+    return facility.code ? `${facility.name} (${facility.code})` : facility.name;
+  }
+
   private loadNavigationMenus(): void {
     this.loadingMenus = true;
     // Use my-menus so any role (e.g. Doctor) can load their assigned menus without needing admin APIs.
@@ -137,6 +169,38 @@ export class MainLayoutComponent implements OnInit {
         this.navItems = [];
       },
     });
+  }
+
+  private loadFacilities(): void {
+    this.facilitiesService
+      .getFacilities({
+        pageNumber: 1,
+        pageSize: 200,
+        sortBy: 'name',
+        sortDesc: false,
+      })
+      .subscribe({
+        next: (result) => {
+          this.facilities = result.items ?? [];
+          if (
+            this.selectedFacilityId &&
+            !this.facilities.some((f) => f.id === this.selectedFacilityId)
+          ) {
+            this.selectedFacilityId = null;
+            this.facilityContext.setActiveFacilityId(null);
+          }
+
+          if (this.selectedFacilityId) {
+            const selected = this.facilities.find((f) => f.id === this.selectedFacilityId);
+            this.facilityInput = selected ? this.getFacilityOptionLabel(selected) : '';
+          } else {
+            this.facilityInput = '';
+          }
+        },
+        error: () => {
+          this.facilities = [];
+        },
+      });
   }
 
   private buildNavTree(menus: MenuDto[]): void {

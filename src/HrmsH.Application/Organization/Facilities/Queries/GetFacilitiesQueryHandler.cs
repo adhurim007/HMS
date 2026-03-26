@@ -1,4 +1,5 @@
 using HrmsH.Application.Abstractions;
+using HrmsH.Application.Common.Interfaces;
 using HrmsH.Application.Common.Models;
 using HrmsH.Application.Organization.Dtos;
 using MediatR;
@@ -9,14 +10,23 @@ namespace HrmsH.Application.Organization.Facilities.Queries;
 public sealed class GetFacilitiesQueryHandler : IRequestHandler<GetFacilitiesQuery, PagedResult<FacilityDto>>
 {
     private readonly IHrmsDbContext _db;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetFacilitiesQueryHandler(IHrmsDbContext db) => _db = db;
+    public GetFacilitiesQueryHandler(IHrmsDbContext db, ICurrentUserService currentUser)
+    {
+        _db = db;
+        _currentUser = currentUser;
+    }
 
     public async Task<PagedResult<FacilityDto>> Handle(GetFacilitiesQuery request, CancellationToken cancellationToken)
     {
         var p = request.Pagination;
 
         var query = _db.Facilities.AsNoTracking();
+        if (!_currentUser.IsSuperAdmin && _currentUser.HospitalId is int hospitalId)
+        {
+            query = query.Where(x => x.HospitalId == hospitalId);
+        }
 
         if (!string.IsNullOrWhiteSpace(p.Search))
         {
@@ -40,9 +50,11 @@ public sealed class GetFacilitiesQueryHandler : IRequestHandler<GetFacilitiesQue
             .Select(x => new FacilityDto
             {
                 Id = x.Id,
+                HospitalId = x.HospitalId,
                 Name = x.Name,
                 Code = x.Code,
-                Address = x.Address
+                Address = x.Address,
+                ParentId = x.ParentId
             })
             .ToListAsync(cancellationToken);
 

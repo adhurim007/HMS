@@ -14,6 +14,7 @@ public sealed class VisitServiceDto
 public sealed class VisitDto
 {
     public int Id { get; init; }
+    public int? FacilityId { get; init; }
     public int PatientId { get; init; }
     public int? DoctorId { get; init; }
     public bool HasPrescription { get; init; }

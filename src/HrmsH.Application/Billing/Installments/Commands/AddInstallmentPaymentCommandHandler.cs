@@ -1,6 +1,7 @@
 using HrmsH.Application.Abstractions;
 using HrmsH.Application.Billing.Invoices.Dtos;
 using HrmsH.Application.Common.Exceptions;
+using HrmsH.Application.Common.Interfaces;
 using HrmsH.Domain.Billing;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -10,8 +11,13 @@ namespace HrmsH.Application.Billing.Installments.Commands;
 public sealed class AddInstallmentPaymentCommandHandler : IRequestHandler<AddInstallmentPaymentCommand, PaymentDto>
 {
     private readonly IHrmsDbContext _db;
+    private readonly IFacilityContextService _facilityContext;
 
-    public AddInstallmentPaymentCommandHandler(IHrmsDbContext db) => _db = db;
+    public AddInstallmentPaymentCommandHandler(IHrmsDbContext db, IFacilityContextService facilityContext)
+    {
+        _db = db;
+        _facilityContext = facilityContext;
+    }
 
     public async Task<PaymentDto> Handle(AddInstallmentPaymentCommand request, CancellationToken cancellationToken)
     {
@@ -41,6 +47,7 @@ public sealed class AddInstallmentPaymentCommandHandler : IRequestHandler<AddIns
         var paymentDate = request.PaymentDate ?? DateTime.UtcNow;
         var payment = new Payment
         {
+            FacilityId = request.FacilityId ?? _facilityContext.ActiveFacilityId ?? invoice.FacilityId ?? item.FacilityId,
             InvoiceId = invoice.Id,
             InstallmentItemId = item.Id,
             PaymentDate = paymentDate,
@@ -72,6 +79,7 @@ public sealed class AddInstallmentPaymentCommandHandler : IRequestHandler<AddIns
         return new PaymentDto
         {
             Id = payment.Id,
+            FacilityId = payment.FacilityId,
             InvoiceId = payment.InvoiceId,
             InstallmentItemId = payment.InstallmentItemId,
             PaymentDate = payment.PaymentDate,

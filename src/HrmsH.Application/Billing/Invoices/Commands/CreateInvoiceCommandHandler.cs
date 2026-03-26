@@ -1,6 +1,7 @@
 using HrmsH.Application.Abstractions;
 using HrmsH.Application.Billing.Invoices.Dtos;
 using HrmsH.Application.Common.Exceptions;
+using HrmsH.Application.Common.Interfaces;
 using HrmsH.Domain.Billing;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -10,8 +11,13 @@ namespace HrmsH.Application.Billing.Invoices.Commands;
 public sealed class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand, InvoiceDto>
 {
     private readonly IHrmsDbContext _db;
+    private readonly IFacilityContextService _facilityContext;
 
-    public CreateInvoiceCommandHandler(IHrmsDbContext db) => _db = db;
+    public CreateInvoiceCommandHandler(IHrmsDbContext db, IFacilityContextService facilityContext)
+    {
+        _db = db;
+        _facilityContext = facilityContext;
+    }
 
     public async Task<InvoiceDto> Handle(CreateInvoiceCommand request, CancellationToken cancellationToken)
     {
@@ -23,6 +29,7 @@ public sealed class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceC
         var invoice = new Invoice
         {
             InvoiceNumber = "INV-TMP-" + Guid.NewGuid().ToString("N")[..8],
+            FacilityId = request.FacilityId ?? _facilityContext.ActiveFacilityId,
             PatientId = request.PatientId,
             InvoiceDate = invoiceDate,
             TotalAmount = 0,
@@ -167,6 +174,7 @@ public sealed class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceC
         {
             Id = invoice.Id,
             InvoiceNumber = invoice.InvoiceNumber,
+            FacilityId = invoice.FacilityId,
             PatientId = invoice.PatientId,
             InvoiceDate = invoice.InvoiceDate,
             TotalAmount = invoice.TotalAmount,

@@ -12,6 +12,7 @@ public sealed class LaboratoryOrderConfiguration : IEntityTypeConfiguration<Labo
         builder.Property(x => x.ClinicalIndication).HasMaxLength(2000);
         builder.Property(x => x.PaymentMethod).HasMaxLength(100);
         builder.Property(x => x.TotalAmount).HasPrecision(18, 2);
+        builder.HasIndex(x => x.FacilityId);
     }
 }
 

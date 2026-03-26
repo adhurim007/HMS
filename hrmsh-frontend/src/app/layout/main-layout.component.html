@@ -15,6 +15,24 @@
         <div class="d-flex align-items-center gap-2">
           <span class="d-none d-xl-inline-block fw-medium">{{ 'layout.brand' | t }}</span>
           @if (isAuthenticated()) {
+            @if (facilities.length) {
+              <div class="d-flex flex-column me-2" style="min-width: 240px">
+                <input
+                  type="text"
+                  class="form-control form-control-sm"
+                  placeholder="All facilities"
+                  list="layout-facility-list"
+                  [(ngModel)]="facilityInput"
+                  [ngModelOptions]="{ standalone: true }"
+                  (change)="onFacilityChanged($any($event.target).value)"
+                />
+                <datalist id="layout-facility-list">
+                  @for (facility of facilities; track facility.id) {
+                    <option [value]="getFacilityOptionLabel(facility)"></option>
+                  }
+                </datalist>
+              </div>
+            }
             <div class="dropdown position-relative" (click)="$event.stopPropagation()">
               <button
                 type="button"

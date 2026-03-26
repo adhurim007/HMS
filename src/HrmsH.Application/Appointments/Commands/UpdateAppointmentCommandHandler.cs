@@ -1,5 +1,6 @@
 using HrmsH.Application.Abstractions;
 using HrmsH.Application.Appointments.Dtos;
+using HrmsH.Application.Common.Interfaces;
 using HrmsH.Application.Common.Exceptions;
 using HrmsH.Domain.Appointments;
 using MediatR;
@@ -10,10 +11,12 @@ namespace HrmsH.Application.Appointments.Commands;
 public sealed class UpdateAppointmentCommandHandler : IRequestHandler<UpdateAppointmentCommand, AppointmentDto>
 {
     private readonly IHrmsDbContext _db;
+    private readonly IFacilityContextService _facilityContext;
 
-    public UpdateAppointmentCommandHandler(IHrmsDbContext db)
+    public UpdateAppointmentCommandHandler(IHrmsDbContext db, IFacilityContextService facilityContext)
     {
         _db = db;
+        _facilityContext = facilityContext;
     }
 
     public async Task<AppointmentDto> Handle(UpdateAppointmentCommand request, CancellationToken cancellationToken)
@@ -29,10 +32,19 @@ public sealed class UpdateAppointmentCommandHandler : IRequestHandler<UpdateAppo
 
         if (request.DoctorId is int doctorId)
         {
+            var facilityId = request.FacilityId ?? _facilityContext.ActiveFacilityId ?? entity.FacilityId;
             var doctorExists = await _db.StaffMembers
                 .AnyAsync(x => x.Id == doctorId, cancellationToken);
             if (!doctorExists)
                 throw new NotFoundException("Doctor not found.");
+            if (facilityId.HasValue)
+            {
+                var assignedToFacility = await _db.StaffFacilityAssignments
+                    .AsNoTracking()
+                    .AnyAsync(x => x.StaffMemberId == doctorId && x.FacilityId == facilityId.Value, cancellationToken);
+                if (!assignedToFacility)
+                    throw new InvalidOperationException("Doctor is not assigned to the selected facility.");
+            }
 
             var start = request.ScheduledStart;
             minDurationMinutes = await _db.DoctorVisitSettings
@@ -94,6 +106,7 @@ public sealed class UpdateAppointmentCommandHandler : IRequestHandler<UpdateAppo
             effectiveScheduledEnd = end;
         }
 
+        entity.FacilityId = request.FacilityId ?? _facilityContext.ActiveFacilityId ?? entity.FacilityId;
         entity.DoctorId = request.DoctorId;
         entity.DepartmentId = request.DepartmentId;
         entity.ScheduledStart = request.ScheduledStart;
@@ -105,6 +118,7 @@ public sealed class UpdateAppointmentCommandHandler : IRequestHandler<UpdateAppo
         return new AppointmentDto
         {
             Id = entity.Id,
+            FacilityId = entity.FacilityId,
             PatientId = entity.PatientId,
             DoctorId = entity.DoctorId,
             DepartmentId = entity.DepartmentId,
