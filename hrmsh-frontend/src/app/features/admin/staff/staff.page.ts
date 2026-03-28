@@ -2,12 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { switchMap } from 'rxjs/operators';
 import { StaffMemberDto, StaffTypeOption } from './staff.api';
 import { StaffService } from './staff.service';
 import { FacilitiesService } from '../facilities/facilities.service';
 import { FacilityDto } from '../facilities/facilities.api';
 import { DepartmentsService } from '../departments/departments.service';
 import { DepartmentDto } from '../departments/departments.api';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-staff-page',
@@ -45,19 +47,29 @@ export class StaffPage implements OnInit {
 
   facilityFormInput = '';
   facilityFilterInput = '';
+  readonly appRoles = [
+    'Doctor',
+    'Nurse',
+    'Reception',
+    'Pharmacist',
+    'Finance',
+    'Manager',
+  ];
 
   readonly form = this.fb.group({
     fullName: ['', Validators.required],
     staffType: [3, Validators.required],
     phone: [''],
-    email: [''],
-    userId: [null as number | null],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    appRole: ['Reception', Validators.required],
     facilityId: [null as number | null, Validators.required],
     departmentId: [null as number | null],
   });
 
   constructor(
     private readonly fb: FormBuilder,
+    private readonly authService: AuthService,
     private readonly staffService: StaffService,
     private readonly facilitiesService: FacilitiesService,
     private readonly departmentsService: DepartmentsService,
@@ -115,16 +127,25 @@ export class StaffPage implements OnInit {
     }
 
     const v = this.form.value;
-    this.staffService
-      .createStaff({
-        fullName: v.fullName!,
-        staffType: Number(v.staffType),
-        phone: v.phone || null,
-        email: v.email || null,
-        userId: v.userId ? Number(v.userId) : null,
-        departmentId: v.departmentId ?? null,
-        facilityIds: v.facilityId != null ? [Number(v.facilityId)] : [],
-      })
+    const email = (v.email ?? '').trim();
+    const password = v.password ?? '';
+    const appRole = v.appRole ?? this.getDefaultRoleForStaffType(Number(v.staffType));
+
+    this.authService
+      .createUser(email, password, appRole)
+      .pipe(
+        switchMap((createdUser) =>
+          this.staffService.createStaff({
+            fullName: v.fullName!,
+            staffType: Number(v.staffType),
+            phone: v.phone || null,
+            email: email,
+            userId: createdUser.id,
+            departmentId: v.departmentId ?? null,
+            facilityIds: v.facilityId != null ? [Number(v.facilityId)] : [],
+          }),
+        ),
+      )
       .subscribe({
         next: () => {
           this.form.reset({
@@ -132,7 +153,8 @@ export class StaffPage implements OnInit {
             staffType: 3,
             phone: '',
             email: '',
-            userId: null,
+            password: '',
+            appRole: 'Reception',
             facilityId: null,
             departmentId: null,
           });
@@ -142,6 +164,11 @@ export class StaffPage implements OnInit {
           this.load();
         },
       });
+  }
+
+  onStaffTypeChange(): void {
+    const staffType = Number(this.form.value.staffType ?? 3);
+    this.form.patchValue({ appRole: this.getDefaultRoleForStaffType(staffType) }, { emitEvent: false });
   }
 
   onFacilityChange(): void {
@@ -242,5 +269,17 @@ export class StaffPage implements OnInit {
 
   getStaffTypeLabel(value: number): string {
     return this.staffTypes.find((s) => s.value === value)?.label ?? `Type ${value}`;
+  }
+
+  private getDefaultRoleForStaffType(staffType: number): string {
+    switch (staffType) {
+      case 1: return 'Doctor';
+      case 2: return 'Nurse';
+      case 3: return 'Reception';
+      case 4: return 'Pharmacist';
+      case 5: return 'Finance';
+      case 6: return 'Manager';
+      default: return 'Reception';
+    }
   }
 }

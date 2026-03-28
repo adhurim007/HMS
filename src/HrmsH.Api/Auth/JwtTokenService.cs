@@ -40,6 +40,10 @@ public sealed class JwtTokenService
         {
             claims.Add(new Claim("hospital_id", hospitalId.ToString()));
         }
+        if (user.FacilityId is int facilityId)
+        {
+            claims.Add(new Claim("facility_id", facilityId.ToString()));
+        }
 
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var creds = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);

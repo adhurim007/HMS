@@ -5,6 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { ApiService } from '../../../core/services/api.service';
 import { UserListDto, PagedUsersResponse } from './users.api';
+import { HospitalsService } from '../hospitals/hospitals.service';
+import { HospitalDto } from '../hospitals/hospitals.api';
+import { FacilitiesService } from '../facilities/facilities.service';
+import { FacilityDto } from '../facilities/facilities.api';
 
 @Component({
   selector: 'app-users-page',
@@ -18,6 +22,9 @@ export class UsersPage implements OnInit {
   loadingRoles = false;
 
   users: UserListDto[] = [];
+  hospitals: HospitalDto[] = [];
+  facilities: FacilityDto[] = [];
+  facilityOptions: FacilityDto[] = [];
   totalCount = 0;
   userPageNumber = 1;
   userPageSize = 10;
@@ -34,6 +41,8 @@ export class UsersPage implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
     role: ['', Validators.required],
+    hospitalId: [null as number | null],
+    facilityId: [null as number | null],
   });
 
   saving = false;
@@ -44,11 +53,19 @@ export class UsersPage implements OnInit {
     private readonly fb: FormBuilder,
     private readonly auth: AuthService,
     private readonly api: ApiService,
+    private readonly hospitalsService: HospitalsService,
+    private readonly facilitiesService: FacilitiesService,
   ) {}
 
   ngOnInit(): void {
     this.loadRoles();
+    this.loadHospitals();
+    this.loadFacilities();
     this.loadUsers();
+  }
+
+  get isSuperAdmin(): boolean {
+    return this.auth.hasRole('SuperAdmin');
   }
 
   private loadRoles(): void {
@@ -73,6 +90,40 @@ export class UsersPage implements OnInit {
           this.errorMessage = 'Failed to load roles.';
         },
       });
+  }
+
+  private loadHospitals(): void {
+    if (!this.isSuperAdmin) return;
+    this.hospitalsService
+      .getHospitals({ pageNumber: 1, pageSize: 500, sortBy: 'name', sortDesc: false })
+      .subscribe({
+        next: (res) => {
+          this.hospitals = res.items;
+        },
+      });
+  }
+
+  private loadFacilities(): void {
+    this.facilitiesService
+      .getFacilities({ pageNumber: 1, pageSize: 1000, sortBy: 'name', sortDesc: false })
+      .subscribe({
+        next: (res) => {
+          this.facilities = res.items;
+          this.applyFacilityOptions();
+        },
+      });
+  }
+
+  onHospitalChanged(): void {
+    this.form.patchValue({ facilityId: null });
+    this.applyFacilityOptions();
+  }
+
+  private applyFacilityOptions(): void {
+    const hospitalId = this.form.value.hospitalId ?? null;
+    this.facilityOptions = this.facilities.filter(
+      (f) => hospitalId == null || f.hospitalId === hospitalId,
+    );
   }
 
   loadUsers(): void {
@@ -158,16 +209,31 @@ export class UsersPage implements OnInit {
       return;
     }
 
-    const { email, password, role } = this.form.value;
+    const { email, password, role, hospitalId, facilityId } = this.form.value;
     this.saving = true;
     this.successMessage = '';
     this.errorMessage = '';
 
-    this.auth.createUser(email!, password!, role!).subscribe({
+    this.auth
+      .createUser(
+        email!,
+        password!,
+        role!,
+        this.isSuperAdmin ? (hospitalId ?? null) : null,
+        facilityId ?? null,
+      )
+      .subscribe({
       next: () => {
         this.saving = false;
         this.successMessage = 'User created successfully.';
-        this.form.reset();
+        this.form.reset({
+          email: '',
+          password: '',
+          role: '',
+          hospitalId: null,
+          facilityId: null,
+        });
+        this.applyFacilityOptions();
         this.loadUsers();
       },
       error: (err) => {

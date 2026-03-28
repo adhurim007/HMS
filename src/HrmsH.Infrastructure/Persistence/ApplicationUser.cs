@@ -5,5 +5,6 @@ namespace HrmsH.Infrastructure.Persistence;
 public class ApplicationUser : IdentityUser<int>
 {
     public int? HospitalId { get; set; }
+    public int? FacilityId { get; set; }
 }
 

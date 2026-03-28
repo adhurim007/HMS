@@ -24,7 +24,7 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Staff Type</label>
-            <select class="form-select" formControlName="staffType">
+            <select class="form-select" formControlName="staffType" (change)="onStaffTypeChange()">
               <option *ngFor="let t of staffTypes" [ngValue]="t.value">{{ t.label }}</option>
             </select>
           </div>
@@ -59,8 +59,14 @@
             <input class="form-control" type="email" formControlName="email" />
           </div>
           <div class="mb-3">
-            <label class="form-label">User ID (optional)</label>
-            <input class="form-control" type="number" formControlName="userId" />
+            <label class="form-label">Password</label>
+            <input class="form-control" type="password" formControlName="password" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Application Role</label>
+            <select class="form-select" formControlName="appRole">
+              <option *ngFor="let role of appRoles" [ngValue]="role">{{ role }}</option>
+            </select>
           </div>
           <button class="btn btn-primary w-100" type="submit">Save Staff</button>
         </form>

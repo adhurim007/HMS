@@ -15,11 +15,13 @@ public sealed class UsersController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ICurrentUserService _currentUser;
+    private readonly HrmsDbContext _dbContext;
 
-    public UsersController(UserManager<ApplicationUser> userManager, ICurrentUserService currentUser)
+    public UsersController(UserManager<ApplicationUser> userManager, ICurrentUserService currentUser, HrmsDbContext dbContext)
     {
         _userManager = userManager;
         _currentUser = currentUser;
+        _dbContext = dbContext;
     }
 
     [HttpGet]
@@ -57,7 +59,15 @@ public sealed class UsersController : ControllerBase
                 Id = user.Id,
                 Email = user.Email ?? user.UserName ?? user.Id.ToString(),
                 Roles = roles.ToList(),
-                LockoutEnd = user.LockoutEnd?.UtcDateTime
+                LockoutEnd = user.LockoutEnd?.UtcDateTime,
+                HospitalId = user.HospitalId,
+                FacilityId = user.FacilityId,
+                HospitalName = user.HospitalId is int userHospitalId
+                    ? await _dbContext.Hospitals.AsNoTracking().Where(h => h.Id == userHospitalId).Select(h => h.Name).FirstOrDefaultAsync()
+                    : null,
+                FacilityName = user.FacilityId is int facilityId
+                    ? await _dbContext.Facilities.AsNoTracking().Where(f => f.Id == facilityId).Select(f => f.Name).FirstOrDefaultAsync()
+                    : null
             });
         }
 
@@ -96,6 +106,10 @@ public sealed class UserListDto
     public required string Email { get; init; }
     public IReadOnlyList<string> Roles { get; init; } = Array.Empty<string>();
     public DateTime? LockoutEnd { get; init; }
+    public int? HospitalId { get; init; }
+    public string? HospitalName { get; init; }
+    public int? FacilityId { get; init; }
+    public string? FacilityName { get; init; }
 }
 
 public sealed class ResetPasswordRequest

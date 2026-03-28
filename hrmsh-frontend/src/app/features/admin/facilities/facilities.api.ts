@@ -1,5 +1,6 @@
 export interface FacilityDto {
   id: number;
+  hospitalId: number;
   name: string;
   code?: string;
   address?: string;

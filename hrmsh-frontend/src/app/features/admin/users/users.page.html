@@ -77,6 +77,31 @@
             }
           </div>
 
+          <div class="mb-3" *ngIf="isSuperAdmin">
+            <label for="hospitalId" class="form-label">Hospital</label>
+            <select
+              id="hospitalId"
+              class="form-select"
+              formControlName="hospitalId"
+              (change)="onHospitalChanged()"
+            >
+              <option [ngValue]="null">Select hospital</option>
+              <option *ngFor="let h of hospitals" [ngValue]="h.id">
+                {{ h.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="facilityId" class="form-label">Facility (optional)</label>
+            <select id="facilityId" class="form-select" formControlName="facilityId">
+              <option [ngValue]="null">All facilities</option>
+              <option *ngFor="let f of facilityOptions" [ngValue]="f.id">
+                {{ f.name }}
+              </option>
+            </select>
+          </div>
+
           @if (successMessage) {
             <div class="alert alert-success" role="alert">
               {{ successMessage }}
@@ -119,19 +144,21 @@
                 <th>Id</th>
                 <th>Email</th>
                 <th>Roles</th>
+                <th>Hospital</th>
+                <th>Facility</th>
                 <th class="text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngIf="loadingUsers">
-                <td colspan="4" class="text-center py-4">
+                <td colspan="6" class="text-center py-4">
                   <div class="spinner-border spinner-border-sm text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                   </div>
                 </td>
               </tr>
               <tr *ngIf="!loadingUsers && users.length === 0">
-                <td colspan="4" class="text-center py-4 text-muted">No users found.</td>
+                <td colspan="6" class="text-center py-4 text-muted">No users found.</td>
               </tr>
               <tr *ngFor="let u of users">
                 <td>{{ u.id }}</td>
@@ -140,6 +167,8 @@
                   <span class="badge bg-primary-subtle text-primary me-1" *ngFor="let r of u.roles">{{ r }}</span>
                   <span *ngIf="!u.roles?.length" class="text-muted">—</span>
                 </td>
+                <td>{{ u.hospitalName || '-' }}</td>
+                <td>{{ u.facilityName || '-' }}</td>
                 <td class="text-end">
                   <button type="button" class="btn btn-soft-warning btn-sm" (click)="openResetModal(u)">
                     Reset password

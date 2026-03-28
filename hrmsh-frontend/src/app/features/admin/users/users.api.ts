@@ -3,6 +3,10 @@ export interface UserListDto {
   email: string;
   roles: string[];
   lockoutEnd?: string | null;
+  hospitalId?: number | null;
+  hospitalName?: string | null;
+  facilityId?: number | null;
+  facilityName?: string | null;
 }
 
 export interface PagedUsersResponse {

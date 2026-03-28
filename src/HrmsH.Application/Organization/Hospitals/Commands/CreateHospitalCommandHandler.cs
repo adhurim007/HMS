@@ -32,6 +32,35 @@ public sealed class CreateHospitalCommandHandler : IRequestHandler<CreateHospita
         _db.Hospitals.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);
 
+        var defaultFacilityName = $"{entity.Name} - Main Facility";
+        var defaultFacilityCode = string.IsNullOrWhiteSpace(entity.Code)
+            ? $"H{entity.Id}-MAIN"
+            : $"{entity.Code}-MAIN";
+        if (defaultFacilityCode.Length > 50)
+        {
+            defaultFacilityCode = defaultFacilityCode[..50];
+        }
+
+        var codeExists = await _db.Facilities
+            .AsNoTracking()
+            .AnyAsync(x => x.Code == defaultFacilityCode, cancellationToken);
+        if (codeExists)
+        {
+            defaultFacilityCode = $"H{entity.Id}-MAIN";
+        }
+
+        var defaultFacility = new Facility
+        {
+            HospitalId = entity.Id,
+            Name = defaultFacilityName.Length > 200 ? defaultFacilityName[..200] : defaultFacilityName,
+            Code = defaultFacilityCode,
+            Address = entity.Address,
+            ParentId = null
+        };
+
+        _db.Facilities.Add(defaultFacility);
+        await _db.SaveChangesAsync(cancellationToken);
+
         return new HospitalDto
         {
             Id = entity.Id,

@@ -61,20 +61,28 @@ export class AuthService {
       );
   }
 
-  createUser(email: string, password: string, role: string): Observable<void> {
+  createUser(
+    email: string,
+    password: string,
+    role: string,
+    hospitalId?: number | null,
+    facilityId?: number | null,
+  ): Observable<CreateUserResponse> {
     return this.api
       .post<ApiResponse<CreateUserResponse>>('Auth/create-user', {
         email,
         password,
         role,
+        hospitalId: hospitalId ?? null,
+        facilityId: facilityId ?? null,
       })
       .pipe(
-        tap((res) => {
+        map((res) => {
           if (!res.success || !res.data) {
             throw new Error(res.message || 'Failed to create user');
           }
+          return res.data;
         }),
-        map(() => void 0),
       );
   }
 
