@@ -342,6 +342,12 @@ export class AppointmentsPage implements OnInit {
         bloodGroup: null,
         chronicConditions: null,
         allergies: null,
+        parentGuardianName: null,
+        pediatricMtl: null,
+        pediatricGjtl: null,
+        pediatricPkl: null,
+        priorLiveBirth: null,
+        priorAbortion: null,
       })
       .subscribe({
         next: (p) => {

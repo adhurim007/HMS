@@ -11,4 +11,5 @@ public sealed record CreateVisitCommand(
     string? ChiefComplaint,
     string? Notes,
     string? Diagnosis,
+    string? ClinicalDataJson,
     IReadOnlyList<VisitServiceInput>? Services) : IRequest<VisitDto>;

@@ -1,4 +1,5 @@
 using HrmsH.Application.Common.Models;
+using HrmsH.Domain.Patients;
 using MediatR;
 
 namespace HrmsH.Application.Patients.Visits.Queries;
@@ -22,6 +23,7 @@ public sealed class VisitListDto
     public int? DoctorId { get; init; }
     public bool HasPrescription { get; init; }
     public DateTime VisitDate { get; init; }
+    public string VisitFormTemplate { get; init; } = VisitFormTemplates.General;
     public string? ChiefComplaint { get; init; }
     public string? Diagnosis { get; init; }
 }

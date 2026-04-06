@@ -318,6 +318,65 @@
                   placeholder="e.g. Penicillin, Latex"
                 ></textarea>
               </div>
+
+              <div class="col-12">
+                <hr class="my-2" />
+                <h6 class="text-muted text-uppercase mb-3">
+                  Department context (optional)
+                </h6>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Parent / guardian name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="parentGuardianName"
+                  placeholder="For pediatric patients"
+                />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Mtl</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  class="form-control"
+                  formControlName="pediatricMtl"
+                />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Gjtl</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  class="form-control"
+                  formControlName="pediatricGjtl"
+                />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Pkl</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  class="form-control"
+                  formControlName="pediatricPkl"
+                />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Prior live birth</label>
+                <select class="form-select" formControlName="priorLiveBirth">
+                  <option [ngValue]="null">Not recorded</option>
+                  <option [ngValue]="true">Yes</option>
+                  <option [ngValue]="false">No</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Prior abortion</label>
+                <select class="form-select" formControlName="priorAbortion">
+                  <option [ngValue]="null">Not recorded</option>
+                  <option [ngValue]="true">Yes</option>
+                  <option [ngValue]="false">No</option>
+                </select>
+              </div>
             </div>
             <div class="d-flex justify-content-end gap-2">
               <button

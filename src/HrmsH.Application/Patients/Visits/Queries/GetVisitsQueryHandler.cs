@@ -52,6 +52,7 @@ public sealed class GetVisitsQueryHandler : IRequestHandler<GetVisitsQuery, Page
                 DoctorId = x.DoctorId,
                 HasPrescription = _db.Prescriptions.Any(p => p.VisitId == x.Id),
                 VisitDate = x.VisitDate,
+                VisitFormTemplate = x.VisitFormTemplate,
                 ChiefComplaint = x.ChiefComplaint,
                 Diagnosis = x.Diagnosis
             })

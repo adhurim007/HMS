@@ -1,4 +1,4 @@
-using HrmsH.Domain.Common;
+﻿using HrmsH.Domain.Common;
 
 namespace HrmsH.Domain.Patients;
 
@@ -18,6 +18,12 @@ public class Patient : BaseEntity
     public string? ChronicConditions { get; set; }
     public string? Allergies { get; set; }
 
+    public string? ParentGuardianName { get; set; }
+    public decimal? PediatricMtl { get; set; }
+    public decimal? PediatricGjtl { get; set; }
+    public decimal? PediatricPkl { get; set; }
+    public bool? PriorLiveBirth { get; set; }
+    public bool? PriorAbortion { get; set; }
+
     public ICollection<Visit> Visits { get; set; } = new List<Visit>();
 }
-

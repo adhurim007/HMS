@@ -24,17 +24,6 @@ public sealed class GetPatientByIdQueryHandler : IRequestHandler<GetPatientByIdQ
         if (patient is null)
             throw new NotFoundException("Patient not found.");
 
-        return new PatientDto
-        {
-            Id = patient.Id,
-            MedicalRecordNumber = patient.MedicalRecordNumber,
-            FullName = patient.FullName,
-            DateOfBirth = patient.DateOfBirth,
-            Gender = patient.Gender,
-            Phone = patient.Phone,
-            Email = patient.Email,
-            Address = patient.Address
-        };
+        return PatientDto.FromEntity(patient);
     }
 }
-

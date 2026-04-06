@@ -1,4 +1,4 @@
-using HrmsH.Domain.Patients;
+﻿using HrmsH.Domain.Patients;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -14,7 +14,7 @@ public sealed class VisitServiceConfiguration : IEntityTypeConfiguration<VisitSe
         builder.Property(x => x.UnitPrice).HasColumnType("decimal(18,2)");
 
         builder.HasOne(x => x.Visit)
-            .WithMany()
+            .WithMany(x => x.VisitServices)
             .HasForeignKey(x => x.VisitId)
             .OnDelete(DeleteBehavior.Cascade);
     }

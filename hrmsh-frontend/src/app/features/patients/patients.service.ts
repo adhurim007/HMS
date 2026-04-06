@@ -54,6 +54,12 @@ export class PatientsService {
     bloodGroup?: string | null;
     chronicConditions?: string | null;
     allergies?: string | null;
+    parentGuardianName?: string | null;
+    pediatricMtl?: number | null;
+    pediatricGjtl?: number | null;
+    pediatricPkl?: number | null;
+    priorLiveBirth?: boolean | null;
+    priorAbortion?: boolean | null;
   }): Observable<PatientDto> {
     return this.api
       .post<{ success: boolean; data: PatientDto }>('Patients', payload)
@@ -72,6 +78,12 @@ export class PatientsService {
       bloodGroup?: string | null;
       chronicConditions?: string | null;
       allergies?: string | null;
+      parentGuardianName?: string | null;
+      pediatricMtl?: number | null;
+      pediatricGjtl?: number | null;
+      pediatricPkl?: number | null;
+      priorLiveBirth?: boolean | null;
+      priorAbortion?: boolean | null;
     },
   ): Observable<PatientDto> {
     return this.api

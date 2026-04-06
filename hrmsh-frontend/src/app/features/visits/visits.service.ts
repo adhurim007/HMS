@@ -48,6 +48,7 @@ export class VisitsService {
     chiefComplaint?: string | null;
     notes?: string | null;
     diagnosis?: string | null;
+    clinicalDataJson?: string | null;
     services?: {
       serviceItemId: number;
       quantity: number;
@@ -68,6 +69,7 @@ export class VisitsService {
       chiefComplaint?: string | null;
       notes?: string | null;
       diagnosis?: string | null;
+      clinicalDataJson?: string | null;
       services?: {
         serviceItemId: number;
         quantity: number;

@@ -14,5 +14,11 @@ public sealed record CreatePatientCommand(
     string? Address,
     string? BloodGroup,
     string? ChronicConditions,
-    string? Allergies) : IRequest<PatientDto>;
+    string? Allergies,
+    string? ParentGuardianName,
+    decimal? PediatricMtl,
+    decimal? PediatricGjtl,
+    decimal? PediatricPkl,
+    bool? PriorLiveBirth,
+    bool? PriorAbortion) : IRequest<PatientDto>;
 

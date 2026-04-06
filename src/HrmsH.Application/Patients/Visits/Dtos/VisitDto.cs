@@ -1,3 +1,5 @@
+using HrmsH.Domain.Patients;
+
 namespace HrmsH.Application.Patients.Visits.Dtos;
 
 public sealed class VisitServiceDto
@@ -19,6 +21,8 @@ public sealed class VisitDto
     public int? DoctorId { get; init; }
     public bool HasPrescription { get; init; }
     public DateTime VisitDate { get; init; }
+    public string VisitFormTemplate { get; init; } = VisitFormTemplates.General;
+    public string? ClinicalDataJson { get; init; }
     public string? ChiefComplaint { get; init; }
     public string? Notes { get; init; }
     public string? Diagnosis { get; init; }

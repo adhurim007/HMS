@@ -64,7 +64,16 @@ public sealed class GetPatientsQueryHandler : IRequestHandler<GetPatientsQuery, 
                 Gender = x.Gender,
                 Phone = x.Phone,
                 Email = x.Email,
-                Address = x.Address
+                Address = x.Address,
+                BloodGroup = x.BloodGroup,
+                ChronicConditions = x.ChronicConditions,
+                Allergies = x.Allergies,
+                ParentGuardianName = x.ParentGuardianName,
+                PediatricMtl = x.PediatricMtl,
+                PediatricGjtl = x.PediatricGjtl,
+                PediatricPkl = x.PediatricPkl,
+                PriorLiveBirth = x.PriorLiveBirth,
+                PriorAbortion = x.PriorAbortion
             })
             .ToListAsync(cancellationToken);
 

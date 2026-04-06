@@ -41,6 +41,12 @@ public sealed class UpdateVisitCommandHandler : IRequestHandler<UpdateVisitComma
         entity.ChiefComplaint = request.ChiefComplaint;
         entity.Notes = request.Notes;
         entity.Diagnosis = request.Diagnosis;
+
+        if (entity.VisitFormTemplate == VisitFormTemplates.General)
+            entity.ClinicalDataJson = null;
+        else if (request.ClinicalDataJson is not null)
+            entity.ClinicalDataJson = VisitClinicalJsonGuard.NormalizeOrThrow(request.ClinicalDataJson, entity.VisitFormTemplate);
+
         await _db.SaveChangesAsync(cancellationToken);
 
         var existingServices = await _db.VisitServices
@@ -73,32 +79,12 @@ public sealed class UpdateVisitCommandHandler : IRequestHandler<UpdateVisitComma
         }
 
         if (newServices.Count > 0)
-        {
             _db.VisitServices.AddRange(newServices);
-        }
 
         await _db.SaveChangesAsync(cancellationToken);
 
-        return new VisitDto
-        {
-            Id = entity.Id,
-            FacilityId = entity.FacilityId,
-            PatientId = entity.PatientId,
-            DoctorId = entity.DoctorId,
-            VisitDate = entity.VisitDate,
-            ChiefComplaint = entity.ChiefComplaint,
-            Notes = entity.Notes,
-            Diagnosis = entity.Diagnosis,
-            Services = newServices.Select(vs => new VisitServiceDto
-            {
-                Id = vs.Id,
-                ServiceItemId = vs.ServiceItemId,
-                ServiceName = null,
-                Quantity = vs.Quantity,
-                UnitPrice = vs.UnitPrice,
-                Notes = vs.Notes,
-                IsBilled = vs.IsBilled
-            }).ToList()
-        };
+        var persisted = await _db.Visits.AsNoTracking()
+            .FirstAsync(x => x.Id == entity.Id, cancellationToken);
+        return await VisitDtoFactory.FromEntityAsync(_db, persisted, cancellationToken);
     }
 }

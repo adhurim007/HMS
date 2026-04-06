@@ -17,6 +17,17 @@ import { DoctorDto, DoctorMeDto } from '../doctors/doctors.api';
 import { BillingService } from '../billing/billing.service';
 import { ServiceItemListDto } from '../billing/billing.api';
 import { AuthService } from '../../core/services/auth.service';
+import { DepartmentsService } from '../admin/departments/departments.service';
+import { DepartmentDto } from '../admin/departments/departments.api';
+import {
+  VisitFormTemplate,
+  VisitClinicalV1,
+  VisitFormTemplateId,
+  defaultClinicalDraft,
+  parseClinicalJson,
+  resolveTemplateFromDepartmentCode,
+  computeBmiKgM,
+} from './visit-clinical.models';
 
 @Component({
   selector: 'app-visits-page',
@@ -41,20 +52,17 @@ export class VisitsPage implements OnInit {
 
   patients: PatientDto[] = [];
   doctors: DoctorDto[] = [];
-  /** Set when user is Doctor (not SuperAdmin): form shows only self, no doctor dropdown. */
+  departments: DepartmentDto[] = [];
   currentDoctor: DoctorMeDto | null = null;
   serviceItems: ServiceItemListDto[] = [];
 
-  /** When creating a visit without pre-selected patient (direct from doctor),
-   *  we allow searching by MRN and showing basic patient info instead of a dropdown.
-   */
   patientMrnInput = '';
   patientLookupLoading = false;
   patientLookupError = '';
   selectedPatientName: string | null = null;
   selectedPatientId: number | null = null;
+  selectedPatientDetail: PatientDto | null = null;
 
-  /** Inline quick-create patient from visit screen */
   showNewPatientForm = false;
   newPatientFullName = '';
   newPatientGender: number = 1;
@@ -67,16 +75,21 @@ export class VisitsPage implements OnInit {
   editingHasPrescription = false;
   showForm = false;
 
+  /** Form layout: fixed when editing (server snapshot); derived from doctor when creating. */
+  activeVisitTemplate: VisitFormTemplateId = VisitFormTemplate.General;
+  gynTab: 'report' | 'colposcopy' | 'spermiogram' = 'report';
+  clinicalDraft: VisitClinicalV1 = defaultClinicalDraft();
+
+  readonly VisitFormTemplate = VisitFormTemplate;
+
   readonly form = this.fb.group({
-    // patientId is still sent to backend, but for doctors the UI does not show a dropdown;
-    // instead we resolve the patient via MRN or preselected appointment and set this hidden field.
     patientId: [null as number | null, [Validators.required]],
     doctorId: [null as number | null],
     visitDate: [''],
     chiefComplaint: [''],
     notes: [''],
     diagnosis: [''],
-     services: this.fb.array([]),
+    services: this.fb.array([]),
   });
 
   get servicesArray(): FormArray {
@@ -84,21 +97,29 @@ export class VisitsPage implements OnInit {
   }
 
   get isDoctorView(): boolean {
-    return (
-      this.auth.hasRole('Doctor') &&
-      !this.auth.hasRole('SuperAdmin')
-    );
+    return this.auth.hasRole('Doctor') && !this.auth.hasRole('SuperAdmin');
   }
 
   get canCreateVisit(): boolean {
-    // Doctors can create visits. (Even if the account has multiple roles.)
     return this.auth.hasRole('Doctor') && !this.auth.hasRole('SuperAdmin');
+  }
+
+  get pediatricBmi(): number | null {
+    const w = this.clinicalDraft.vitals?.weightValue;
+    const hCm = this.clinicalDraft.vitals?.heightCm;
+    const unit = (this.clinicalDraft.vitals?.weightUnit || 'kg').toLowerCase();
+    if (w == null || hCm == null || hCm <= 0) return null;
+    let kg = Number(w);
+    if (unit === 'g') kg = kg / 1000;
+    if (!Number.isFinite(kg) || kg <= 0) return null;
+    return computeBmiKgM(kg, hCm / 100);
   }
 
   constructor(
     private readonly visitsService: VisitsService,
     private readonly patientsService: PatientsService,
     private readonly doctorsService: DoctorsService,
+    private readonly departmentsService: DepartmentsService,
     private readonly billingService: BillingService,
     private readonly auth: AuthService,
     private readonly route: ActivatedRoute,
@@ -109,7 +130,6 @@ export class VisitsPage implements OnInit {
     this.loadLookups();
     this.load();
 
-    // If navigated with query params (e.g. from appointment), pre-open create form.
     const qp = this.route.snapshot.queryParamMap;
     const patientIdParam = qp.get('patientId');
     if (patientIdParam) {
@@ -119,6 +139,7 @@ export class VisitsPage implements OnInit {
       this.selectedPatientId = patientId;
       const p = this.patients.find((x) => x.id === patientId);
       this.selectedPatientName = p ? p.fullName : null;
+      this.refreshPatientDetail(patientId);
     }
   }
 
@@ -138,11 +159,30 @@ export class VisitsPage implements OnInit {
         },
       });
 
+    this.departmentsService
+      .getDepartments({
+        pageNumber: 1,
+        pageSize: 500,
+        sortBy: 'name',
+        sortDesc: false,
+        search: null,
+        facilityId: null,
+      })
+      .subscribe({
+        next: (res) => {
+          this.departments = res.items ?? [];
+          this.trySyncTemplateAfterLookups();
+        },
+      });
+
     if (this.isDoctorView) {
       this.currentDoctor = null;
       this.doctors = [];
       this.doctorsService.getMe().subscribe({
-        next: (me) => (this.currentDoctor = me),
+        next: (me) => {
+          this.currentDoctor = me;
+          this.trySyncTemplateAfterLookups();
+        },
         error: () => (this.currentDoctor = null),
       });
     } else {
@@ -187,6 +227,11 @@ export class VisitsPage implements OnInit {
           },
         });
     }
+  }
+
+  private trySyncTemplateAfterLookups(): void {
+    if (!this.showForm || this.editingId != null) return;
+    this.syncActiveTemplateFromDoctor();
   }
 
   load(): void {
@@ -253,11 +298,40 @@ export class VisitsPage implements OnInit {
     this.load();
   }
 
+  computeTemplateForSelectedDoctor(): VisitFormTemplateId {
+    let deptId: number | null | undefined;
+    if (this.isDoctorView && this.currentDoctor?.departmentId != null) {
+      deptId = this.currentDoctor.departmentId;
+    } else {
+      const docId = this.form.value.doctorId;
+      if (docId == null) return VisitFormTemplate.General;
+      const d = this.doctors.find((x) => x.staffMemberId === docId);
+      deptId = d?.departmentId ?? null;
+    }
+    if (deptId == null) return VisitFormTemplate.General;
+    const dep = this.departments.find((x) => x.id === deptId);
+    return resolveTemplateFromDepartmentCode(dep?.code);
+  }
+
+  syncActiveTemplateFromDoctor(): void {
+    if (this.editingId != null) return;
+    this.activeVisitTemplate = this.computeTemplateForSelectedDoctor();
+    this.clinicalDraft = defaultClinicalDraft();
+    this.gynTab = 'report';
+  }
+
+  onDoctorSelectionChanged(): void {
+    if (this.editingId != null) return;
+    this.syncActiveTemplateFromDoctor();
+  }
+
   openCreate(): void {
     this.editingId = null;
     this.editingHasPrescription = false;
     const doctorId =
-      this.isDoctorView && this.currentDoctor ? this.currentDoctor.staffMemberId : null;
+      this.isDoctorView && this.currentDoctor
+        ? this.currentDoctor.staffMemberId
+        : null;
     this.form.reset({
       patientId: null,
       doctorId,
@@ -273,6 +347,8 @@ export class VisitsPage implements OnInit {
     this.patientLookupLoading = false;
     this.selectedPatientName = null;
     this.selectedPatientId = null;
+    this.selectedPatientDetail = null;
+    this.syncActiveTemplateFromDoctor();
     this.showForm = true;
   }
 
@@ -285,6 +361,11 @@ export class VisitsPage implements OnInit {
           this.isDoctorView && this.currentDoctor
             ? this.currentDoctor.staffMemberId
             : (dto.doctorId ?? null);
+        this.activeVisitTemplate =
+          (dto.visitFormTemplate as VisitFormTemplateId) ||
+          VisitFormTemplate.General;
+        this.clinicalDraft = parseClinicalJson(dto.clinicalDataJson);
+        this.gynTab = 'report';
         this.form.reset({
           patientId: dto.patientId,
           doctorId,
@@ -294,14 +375,7 @@ export class VisitsPage implements OnInit {
           diagnosis: dto.diagnosis ?? '',
         });
         this.servicesArray.clear();
-        const services = (dto as any).services as
-          | {
-              serviceItemId: number;
-              quantity: number;
-              unitPrice: number;
-              notes?: string | null;
-            }[]
-          | undefined;
+        const services = dto.services;
         if (services && services.length) {
           services.forEach((s) =>
             this.servicesArray.push(
@@ -322,6 +396,7 @@ export class VisitsPage implements OnInit {
         this.selectedPatientId = dto.patientId;
         const p = this.patients.find((x) => x.id === dto.patientId);
         this.selectedPatientName = p ? p.fullName : null;
+        this.refreshPatientDetail(dto.patientId);
         this.showForm = true;
       },
     });
@@ -330,6 +405,18 @@ export class VisitsPage implements OnInit {
   closeForm(): void {
     this.showForm = false;
     this.editingHasPrescription = false;
+    this.selectedPatientDetail = null;
+  }
+
+  refreshPatientDetail(patientId: number | null): void {
+    if (patientId == null) {
+      this.selectedPatientDetail = null;
+      return;
+    }
+    this.patientsService.getPatient(patientId).subscribe({
+      next: (p) => (this.selectedPatientDetail = p),
+      error: () => (this.selectedPatientDetail = null),
+    });
   }
 
   searchPatientByMrn(): void {
@@ -346,6 +433,7 @@ export class VisitsPage implements OnInit {
         this.selectedPatientId = p.id;
         this.selectedPatientName = p.fullName;
         this.form.patchValue({ patientId: p.id });
+        this.refreshPatientDetail(p.id);
       },
       error: (err) => {
         this.patientLookupLoading = false;
@@ -354,6 +442,7 @@ export class VisitsPage implements OnInit {
         this.patientLookupError = msg;
         this.selectedPatientId = null;
         this.selectedPatientName = null;
+        this.selectedPatientDetail = null;
         this.form.patchValue({ patientId: null });
       },
     });
@@ -397,6 +486,15 @@ export class VisitsPage implements OnInit {
         phone: this.newPatientPhone.trim() || null,
         email: this.newPatientEmail.trim() || null,
         address: null,
+        bloodGroup: null,
+        chronicConditions: null,
+        allergies: null,
+        parentGuardianName: null,
+        pediatricMtl: null,
+        pediatricGjtl: null,
+        pediatricPkl: null,
+        priorLiveBirth: null,
+        priorAbortion: null,
       })
       .subscribe({
         next: (p) => {
@@ -405,8 +503,8 @@ export class VisitsPage implements OnInit {
           this.selectedPatientId = p.id;
           this.selectedPatientName = p.fullName;
           this.form.patchValue({ patientId: p.id });
-          // also refresh local patients list so getPatientName works for this new patient
           this.patients.unshift(p);
+          this.refreshPatientDetail(p.id);
         },
         error: (err) => {
           this.newPatientSaving = false;
@@ -427,27 +525,36 @@ export class VisitsPage implements OnInit {
 
     const v = this.form.value;
 
-    const servicesPayload =
-      this.servicesArray.controls
-        .map((ctrl) => {
-          const sv = ctrl.value as any;
-          if (!sv.serviceItemId) return null;
-          return {
-            serviceItemId: Number(sv.serviceItemId),
-            quantity: sv.quantity ? Number(sv.quantity) : 1,
-            unitPrice:
-              sv.unitPrice !== null && sv.unitPrice !== undefined
-                ? Number(sv.unitPrice)
-                : null,
-            notes: sv.notes || null,
-          };
-        })
-        .filter(Boolean) as {
-        serviceItemId: number;
-        quantity: number;
-        unitPrice: number | null;
-        notes: string | null;
-      }[];
+    const servicesPayload = this.servicesArray.controls
+      .map((ctrl) => {
+        const sv = ctrl.value as {
+          serviceItemId: number | null;
+          quantity: number;
+          unitPrice: number;
+          notes: string | null;
+        };
+        if (!sv.serviceItemId) return null;
+        return {
+          serviceItemId: Number(sv.serviceItemId),
+          quantity: sv.quantity ? Number(sv.quantity) : 1,
+          unitPrice:
+            sv.unitPrice !== null && sv.unitPrice !== undefined
+              ? Number(sv.unitPrice)
+              : null,
+          notes: sv.notes || null,
+        };
+      })
+      .filter(Boolean) as {
+      serviceItemId: number;
+      quantity: number;
+      unitPrice: number | null;
+      notes: string | null;
+    }[];
+
+    const clinicalDataJson =
+      this.activeVisitTemplate === VisitFormTemplate.General
+        ? null
+        : JSON.stringify(this.clinicalDraft);
 
     const payload = {
       patientId: Number(v.patientId),
@@ -456,6 +563,7 @@ export class VisitsPage implements OnInit {
       chiefComplaint: v.chiefComplaint || null,
       notes: v.notes || null,
       diagnosis: v.diagnosis || null,
+      clinicalDataJson,
       services: servicesPayload,
     };
 
@@ -474,8 +582,9 @@ export class VisitsPage implements OnInit {
           chiefComplaint: payload.chiefComplaint,
           notes: payload.notes,
           diagnosis: payload.diagnosis,
-      services: servicesPayload,
-      })
+          clinicalDataJson: payload.clinicalDataJson,
+          services: servicesPayload,
+        })
         .subscribe({
           next: () => {
             this.showForm = false;
@@ -499,10 +608,27 @@ export class VisitsPage implements OnInit {
 
   getDoctorName(id: number | null | undefined): string {
     if (id == null) return '-';
-    if (this.isDoctorView && this.currentDoctor && id === this.currentDoctor.staffMemberId)
+    if (
+      this.isDoctorView &&
+      this.currentDoctor &&
+      id === this.currentDoctor.staffMemberId
+    )
       return this.currentDoctor.fullName;
     const d = this.doctors.find((x) => x.staffMemberId === id);
     return d ? d.fullName : String(id);
+  }
+
+  formatTemplateLabel(t: string): string {
+    switch (t) {
+      case VisitFormTemplate.Pediatrics:
+        return 'Pediatrics';
+      case VisitFormTemplate.Gynecology:
+        return 'Gynecology';
+      case VisitFormTemplate.Dentistry:
+        return 'Dentistry';
+      default:
+        return 'General';
+    }
   }
 
   private buildServiceGroup(data?: {
@@ -513,7 +639,10 @@ export class VisitsPage implements OnInit {
   }) {
     return this.fb.group({
       serviceItemId: [data?.serviceItemId ?? null, Validators.required],
-      quantity: [data?.quantity ?? 1, [Validators.required, Validators.min(1)]],
+      quantity: [
+        data?.quantity ?? 1,
+        [Validators.required, Validators.min(1)],
+      ],
       unitPrice: [data?.unitPrice ?? 0, Validators.required],
       notes: [data?.notes ?? null],
     });

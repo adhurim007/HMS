@@ -16,16 +16,8 @@ public sealed class GetVisitByIdQueryHandler : IRequestHandler<GetVisitByIdQuery
         var entity = await _db.Visits
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
-        return entity is null ? null : new VisitDto
-        {
-            Id = entity.Id,
-            PatientId = entity.PatientId,
-            DoctorId = entity.DoctorId,
-            HasPrescription = await _db.Prescriptions.AsNoTracking().AnyAsync(p => p.VisitId == entity.Id, cancellationToken),
-            VisitDate = entity.VisitDate,
-            ChiefComplaint = entity.ChiefComplaint,
-            Notes = entity.Notes,
-            Diagnosis = entity.Diagnosis
-        };
+        return entity is null
+            ? null
+            : await VisitDtoFactory.FromEntityAsync(_db, entity, cancellationToken);
     }
 }

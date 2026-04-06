@@ -34,6 +34,11 @@ public sealed class CreateVisitCommandHandler : IRequestHandler<CreateVisitComma
                 throw new InvalidOperationException("Doctor is not assigned to the selected facility.");
         }
 
+        var template = await VisitFormTemplateResolver.ResolveForDoctorAsync(_db, request.DoctorId, cancellationToken);
+        var clinicalJson = template == VisitFormTemplates.General
+            ? null
+            : VisitClinicalJsonGuard.NormalizeOrThrow(request.ClinicalDataJson, template);
+
         var entity = new Visit
         {
             FacilityId = facilityId,
@@ -42,7 +47,9 @@ public sealed class CreateVisitCommandHandler : IRequestHandler<CreateVisitComma
             VisitDate = request.VisitDate ?? DateTime.UtcNow,
             ChiefComplaint = request.ChiefComplaint,
             Notes = request.Notes,
-            Diagnosis = request.Diagnosis
+            Diagnosis = request.Diagnosis,
+            VisitFormTemplate = template,
+            ClinicalDataJson = clinicalJson
         };
         _db.Visits.Add(entity);
         await _db.SaveChangesAsync(cancellationToken);
@@ -76,26 +83,8 @@ public sealed class CreateVisitCommandHandler : IRequestHandler<CreateVisitComma
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        return new VisitDto
-        {
-            Id = entity.Id,
-            FacilityId = entity.FacilityId,
-            PatientId = entity.PatientId,
-            DoctorId = entity.DoctorId,
-            VisitDate = entity.VisitDate,
-            ChiefComplaint = entity.ChiefComplaint,
-            Notes = entity.Notes,
-            Diagnosis = entity.Diagnosis,
-            Services = visitServices.Select(vs => new VisitServiceDto
-            {
-                Id = vs.Id,
-                ServiceItemId = vs.ServiceItemId,
-                ServiceName = null,
-                Quantity = vs.Quantity,
-                UnitPrice = vs.UnitPrice,
-                Notes = vs.Notes,
-                IsBilled = vs.IsBilled
-            }).ToList()
-        };
+        var persisted = await _db.Visits.AsNoTracking()
+            .FirstAsync(x => x.Id == entity.Id, cancellationToken);
+        return await VisitDtoFactory.FromEntityAsync(_db, persisted, cancellationToken);
     }
 }

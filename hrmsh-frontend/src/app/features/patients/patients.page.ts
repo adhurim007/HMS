@@ -42,6 +42,12 @@ export class PatientsPage implements OnInit {
     bloodGroup: [''],
     chronicConditions: [''],
     allergies: [''],
+    parentGuardianName: [''],
+    pediatricMtl: ['' as string | number],
+    pediatricGjtl: ['' as string | number],
+    pediatricPkl: ['' as string | number],
+    priorLiveBirth: [null as boolean | null],
+    priorAbortion: [null as boolean | null],
   });
 
   constructor(
@@ -121,6 +127,12 @@ export class PatientsPage implements OnInit {
       bloodGroup: '',
       chronicConditions: '',
       allergies: '',
+      parentGuardianName: '',
+      pediatricMtl: '',
+      pediatricGjtl: '',
+      pediatricPkl: '',
+      priorLiveBirth: null,
+      priorAbortion: null,
     });
     this.showForm = true;
   }
@@ -140,6 +152,12 @@ export class PatientsPage implements OnInit {
       bloodGroup: patient.bloodGroup ?? '',
       chronicConditions: patient.chronicConditions ?? '',
       allergies: patient.allergies ?? '',
+      parentGuardianName: patient.parentGuardianName ?? '',
+      pediatricMtl: patient.pediatricMtl ?? '',
+      pediatricGjtl: patient.pediatricGjtl ?? '',
+      pediatricPkl: patient.pediatricPkl ?? '',
+      priorLiveBirth: patient.priorLiveBirth ?? null,
+      priorAbortion: patient.priorAbortion ?? null,
     });
     this.showForm = true;
   }
@@ -155,6 +173,12 @@ export class PatientsPage implements OnInit {
     }
 
     const value = this.form.value;
+    const numOrNull = (v: string | number | null | undefined) => {
+      if (v === '' || v === null || v === undefined) return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
+
     const payload = {
       medicalRecordNumber: value.medicalRecordNumber!,
       fullName: value.fullName!,
@@ -166,6 +190,12 @@ export class PatientsPage implements OnInit {
       bloodGroup: value.bloodGroup || null,
       chronicConditions: value.chronicConditions || null,
       allergies: value.allergies || null,
+      parentGuardianName: value.parentGuardianName?.trim() || null,
+      pediatricMtl: numOrNull(value.pediatricMtl),
+      pediatricGjtl: numOrNull(value.pediatricGjtl),
+      pediatricPkl: numOrNull(value.pediatricPkl),
+      priorLiveBirth: value.priorLiveBirth ?? null,
+      priorAbortion: value.priorAbortion ?? null,
     };
 
     if (this.editingId == null) {
@@ -187,6 +217,12 @@ export class PatientsPage implements OnInit {
           bloodGroup: payload.bloodGroup,
           chronicConditions: payload.chronicConditions,
           allergies: payload.allergies,
+          parentGuardianName: payload.parentGuardianName,
+          pediatricMtl: payload.pediatricMtl,
+          pediatricGjtl: payload.pediatricGjtl,
+          pediatricPkl: payload.pediatricPkl,
+          priorLiveBirth: payload.priorLiveBirth,
+          priorAbortion: payload.priorAbortion,
         })
         .subscribe({
           next: () => {

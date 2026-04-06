@@ -10,6 +10,12 @@ export interface PatientDto {
   bloodGroup?: string | null;
   chronicConditions?: string | null;
   allergies?: string | null;
+  parentGuardianName?: string | null;
+  pediatricMtl?: number | null;
+  pediatricGjtl?: number | null;
+  pediatricPkl?: number | null;
+  priorLiveBirth?: boolean | null;
+  priorAbortion?: boolean | null;
 }
 
 export interface PagedApiResponse<T> {

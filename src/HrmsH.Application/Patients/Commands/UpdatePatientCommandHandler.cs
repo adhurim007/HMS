@@ -30,23 +30,15 @@ public sealed class UpdatePatientCommandHandler : IRequestHandler<UpdatePatientC
         patient.BloodGroup = request.BloodGroup;
         patient.ChronicConditions = request.ChronicConditions;
         patient.Allergies = request.Allergies;
+        patient.ParentGuardianName = request.ParentGuardianName;
+        patient.PediatricMtl = request.PediatricMtl;
+        patient.PediatricGjtl = request.PediatricGjtl;
+        patient.PediatricPkl = request.PediatricPkl;
+        patient.PriorLiveBirth = request.PriorLiveBirth;
+        patient.PriorAbortion = request.PriorAbortion;
 
         await _db.SaveChangesAsync(cancellationToken);
 
-        return new PatientDto
-        {
-            Id = patient.Id,
-            MedicalRecordNumber = patient.MedicalRecordNumber,
-            FullName = patient.FullName,
-            DateOfBirth = patient.DateOfBirth,
-            Gender = patient.Gender,
-            Phone = patient.Phone,
-            Email = patient.Email,
-            Address = patient.Address,
-            BloodGroup = patient.BloodGroup,
-            ChronicConditions = patient.ChronicConditions,
-            Allergies = patient.Allergies
-        };
+        return PatientDto.FromEntity(patient);
     }
 }
-
